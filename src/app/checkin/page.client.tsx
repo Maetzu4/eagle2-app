@@ -67,8 +67,17 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
     sello: "",
     valor_declarado: "",
     ruta_llegada: "",
-    userId: user.user.email,
-    clienteId: 0,
+    userId: "1",
+    clienteId: 1,
+    nombre_cliente: "",
+    user: {
+      name: "",
+      lastName: "",
+    },
+    cliente: {
+      nom_cliente: "",
+      fondoId: 1
+    }
   });
 
   useEffect(() => {
@@ -79,13 +88,13 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
         if (!clientesRes.ok) throw new Error("Error al cargar clientes");
         const clientesData = await clientesRes.json();
         setClientes(clientesData);
-  
+
         // Fetch fondos
         const fondosRes = await fetch("/api/fondos");
         if (!fondosRes.ok) throw new Error("Error al cargar fondos");
         const fondosData = await fondosRes.json();
         setFondos(fondosData);
-  
+
         // Fetch check-ins
         const checkinsRes = await fetch("/api/checkins");
         if (!checkinsRes.ok) throw new Error("Error al cargar check-ins");
@@ -95,22 +104,22 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
         console.error("Error al cargar los datos:", err);
       }
     };
-  
+
     fetchData();
   }, []);
-  
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ 
-      ...prev, 
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
       // Update nombre when clienteId or fondoId changes
-      ...(name === 'clienteId' ? { 
-        nombre_cliente: clientes.find(c => c.id === Number(value))?.nom_cliente 
+      ...(name === 'clienteId' ? {
+        nombre_cliente: clientes.find(c => c.id === Number(value))?.nom_cliente
       } : {}),
-      ...(name === 'fondoId' ? { 
-        nombre_fondo: fondos.find(f => f.id === Number(value))?.nom_cliente 
+      ...(name === 'fondoId' ? {
+        nombre_fondo: fondos.find(f => f.id === Number(value))?.nom_cliente
       } : {})
     }));
   };
@@ -118,10 +127,14 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const newCheckin = { 
+      const newCheckin = {
         ...formData,
-        userId: user.user.email
+        user:{
+          id: 1, // hardcoded user id
+        }
       };
+
+      console.log(newCheckin)
 
       const res = await fetch("/api/checkins", {
         method: formData.id ? "PUT" : "POST",
@@ -130,17 +143,17 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
       });
 
       const createdCheckin = await res.json();
-      
+
       // Update records
       if (formData.id) {
         // Update existing record
-        setRecords(prev => prev.map(record => 
-          record.id === createdCheckin.id 
-            ? { 
-                ...createdCheckin, 
-                user: { name: user.user.name, lastName: user.user.lastName },
-                cliente: { nom_cliente: formData.nombre_cliente || '' },
-              } 
+        setRecords(prev => prev.map(record =>
+          record.id === createdCheckin.id
+            ? {
+              ...createdCheckin,
+              user: { name: user.user.name, lastName: user.user.lastName },
+              cliente: { nom_cliente: formData.nombre_cliente || '' },
+            }
             : record
         ));
       } else {
@@ -161,7 +174,7 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
         sello: "",
         valor_declarado: "",
         ruta_llegada: "",
-        userId: user.user.id,
+        userId: "1",
         clienteId: 0,
       });
     } catch (error) {
@@ -170,10 +183,6 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
   };
 
   const handleEdit = (record: Record) => {
-    if (record.userId !== user.user.id) {
-      alert("Solo puedes modificar los check-ins que tú creaste.");
-      return;
-    }
     setFormData({
       id: record.id,
       num_factura: record.num_factura,
@@ -325,8 +334,8 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
                       : ""}
                   </TableCell>
                   <TableCell>
-                    {record.user 
-                      ? `${record.user.name} ${record.user.lastName}` 
+                    {record.user
+                      ? `${record.user.name} ${record.user.lastName}`
                       : ''}
                   </TableCell>
                   <TableCell>

@@ -24,7 +24,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
 
         if (!user || !user.password) {
-          throw new Error("Credenciales invalidas");
+          throw new Error("Credenciales invalida  s");
         }
 
         const isValidPassword = (await data.contrasena) === user.password;
@@ -33,7 +33,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!isValidPassword) {
           throw new Error("Credenciales invalidas");
         }
-        return user;
+
+        return { id: user.id, name: user.name, lastName:user.lastName, email: user.email, role: user.role };
+
+        //return user;
       },
     }),
   ],
