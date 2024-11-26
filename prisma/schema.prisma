@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model note {
+  id              Int      @id @default(autoincrement())
+  num_factura     String?
+  sello           String?
+  valor_declarado String?
+  ruta_llegada    String?
+  fecha_registro  DateTime @default(now())
+}
+
+model checkin {
+  id              Int      @id @default(autoincrement())
+  num_factura     String?
+  sello           String?
+  valor_declarado String?
+  ruta_llegada    String?
+  fecha_registro  DateTime @default(now())
+  userId          String   @unique(map: "Checkin_userId_key")
+  clienteId       Int
+  cliente         cliente  @relation(fields: [clienteId], references: [id], map: "Checkin_clienteId_fkey")
+  user            user     @relation(fields: [userId], references: [id], map: "Checkin_userId_fkey")
+
+  @@index([clienteId], map: "Checkin_clienteId_fkey")
+}
+
+model cliente {
+  id          Int          @id @default(autoincrement())
+  nom_cliente String
+  tipo        cliente_tipo
+  fondoId     Int
+  checkin     checkin[]
+  fondo       fondo        @relation(fields: [fondoId], references: [id], map: "Cliente_fondoId_fkey")
+
+  @@index([fondoId], map: "Cliente_fondoId_fkey")
+}
+
+model digitador {
+  id             Int          @id @default(autoincrement())
+  fecha_cierre   DateTime?
+  valor_revisado String?
+  fecha_certif   DateTime?
+  userId         String       @unique(map: "Digitador_userId_key")
+  user           user         @relation(fields: [userId], references: [id], map: "Digitador_userId_fkey")
+  fechcierre     fechcierre[]
+}
+
+model fechcierre {
+  id                     Int       @id @default(autoincrement())
+  fecha_a_cerrar         DateTime?
+  planilla               String?
+  valor_total_verificado String?
+  fecha_certificacion    DateTime?
+  fondoId                Int
+  digitadorId            Int
+  digitador              digitador @relation(fields: [digitadorId], references: [id], map: "FechCierre_digitadorId_fkey")
+  fondo                  fondo     @relation(fields: [fondoId], references: [id], map: "FechCierre_fondoId_fkey")
+
+  @@index([digitadorId], map: "FechCierre_digitadorId_fkey")
+  @@index([fondoId], map: "FechCierre_fondoId_fkey")
+}
+
+model fondo {
+  id          Int          @id @default(autoincrement())
+  nom_cliente String
+  tipo        fondo_tipo
+  cliente     cliente[]
+  fechcierre  fechcierre[]
+}
+
+model servicio {
+  id              Int      @id @default(autoincrement())
+  numero_planilla String?
+  fecha_registro  DateTime @default(now())
+  billetes_100000 Int?
+  billetes_50000  Int?
+  billetes_20000  Int?
+  billetes_10000  Int?
+  billetes_5000   Int?
+  billetes_2000   Int?
+  billetes_1000   Int?
+  total_valor     String?
+}
+
+model user {
+  id        String      @id
+  username  String      @unique(map: "User_username_key")
+  email     String      @unique(map: "User_email_key")
+  password  String
+  name      String
+  lastName  String
+  cod_sed   String
+  role      user_role   @default(Admin)
+  status    user_status @default(Activo)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime
+  checkin   checkin?
+  digitador digitador?
+}
+
+enum cliente_tipo {
+  Premium
+  Basico
+}
+
+enum fondo_tipo {
+  Tipo1
+  Tipo2
+}
+
+enum user_role {
+  Admin
+  Checkinero
+  Operario
+  Digitador
+}
+
+enum user_status {
+  Activo
+  Inactivo
+}

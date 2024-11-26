@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -17,17 +16,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-
-const loginSchema = z.object({
-  usuario: z.string().min(1, { message: "El usuario es obligatorio." }),
-  contrasena: z.string().min(1, { message: "La contraseña es obligatoria." }),
-});
+import { loginSchema } from "@/lib/loginShema";
+import { LoginAction } from "@/actions/auth-action";
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function Login() {
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -39,39 +36,15 @@ export default function Login() {
 
   const onSubmit = async (data: LoginFormValues) => {
     setError(null);
+    startTransition(async () =>{
+      const response = await LoginAction(data);
 
-    try {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const { message } = await response.json();
-        setError(message || "Credenciales inválidas.");
-        return;
+      if (response.error) {
+        setError(response.error)
+      } else {
+        router.push("/checkin")
       }
-
-      const { area } = await response.json();
-
-      switch (area) {
-        case "checkin":
-          router.push("/checkin");
-          break;
-        case "digitador":
-          router.push("/digitador");
-          break;
-        case "operario":
-          router.push("/operario");
-          break;
-        default:
-          setError("Rol no reconocido.");
-      }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (err) {
-      setError("Ocurrió un error al intentar iniciar sesión.");
-    }
+    })
   };
 
   return (
@@ -83,7 +56,7 @@ export default function Login() {
           Iniciar Sesión
         </h2>
         {error && (
-          <p className="mt-4 text-sm text-red-500 text-center">{error}</p>
+          <p className="mt-4 text-sm text-red-500 text-center font-semibold">{error}</p>
         )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-6">
@@ -117,7 +90,7 @@ export default function Login() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full px-4 py-2 font-bold bg-cyan-700 hover:bg-cyan-900">
+            <Button disabled={isPending} type="submit" className="w-full px-4 py-2 font-bold bg-cyan-700 hover:bg-cyan-900">
               Entrar
             </Button>
           </form>
