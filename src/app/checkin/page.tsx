@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import router from "next/router";
+import LogOutBtn from "@/components/logOutBtn";
 
 interface Record {
   numero_factura: string;
@@ -23,6 +23,7 @@ interface Record {
 }
 
 export default function CheckinLlegadas() {
+
   const [records, setRecords] = useState<Record[]>([
     {
       numero_factura: "FAC001",
@@ -92,9 +93,7 @@ export default function CheckinLlegadas() {
           <nav>
             <ul className="flex space-x-4">
               <li>
-                <button onClick={() => router.push("/logout")} className="hover:underline">
-                  Cerrar Sesión
-                </button>
+                <LogOutBtn text={"cerrar sesión"} />
               </li>
             </ul>
           </nav>

@@ -31,8 +31,8 @@ export default function Logout() {
   }, [router]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <h1 className="text-xl font-semibold text-gray-700">Cerrando sesión...</h1>
+    <div className="flex items-center justify-center h-screen bg-gradient-to-bl from-slate-400 to-cyan-800 gap-60">
+      <h1 className="text-6xl font-bold text-center text-cyan-50">Cerrando sesión...</h1>
     </div>
   );
 }

@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const sql = "SELECT rol FROM usuario WHERE nombre_usuario = ? AND password1 = ?";
+    const sql = "SELECT rol FROM usuario WHERE nombre_usuario = ? AND contrasena = ?";
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const results: any = await query({ query: sql, values: [usuario, contrasena] });
 
@@ -21,10 +21,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Credenciales inválidas" }, { status: 401 });
     }
 
-    const { rol } = results[0];
+    const { rol }  = results[0];
+
+    console.log(rol)
 
     // Enviar respuesta con el rol del usuario
-    return NextResponse.json({ area: rol });
+    return NextResponse.json({area: rol}, { status: 200 });
   } catch (error) {
     console.error("Error en la API de login:", error);
     return NextResponse.json(

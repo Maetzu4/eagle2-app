@@ -14,7 +14,7 @@ export async function query({ query, values = [] }:QueryProps): Promise<unknown>
     // Establecer la conexión con la base de datos MySQL
     const dbconnection = await mysql.createConnection({
         host: "localhost", // Dirección del servidor de la base de datos
-        database: "eagle2_0", // Nombre de la base de datos a la que se conecta
+        database: "eagle", // Nombre de la base de datos a la que se conecta
         user: "root", // Nombre de usuario para la conexión
         password: "", // Contraseña del usuario
     });

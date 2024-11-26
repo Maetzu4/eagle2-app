@@ -47,6 +47,8 @@ export default function Login() {
         body: JSON.stringify(data),
       });
 
+      console.log(response)
+
       if (!response.ok) {
         const { message } = await response.json();
         setError(message || "Credenciales inválidas.");
@@ -56,13 +58,13 @@ export default function Login() {
       const { area } = await response.json();
 
       switch (area) {
-        case "checkin":
+        case "Checkinero":
           router.push("/checkin");
           break;
-        case "digitador":
+        case "Digitador":
           router.push("/digitador");
           break;
-        case "operario":
+        case "Operario":
           router.push("/operario");
           break;
         default:
