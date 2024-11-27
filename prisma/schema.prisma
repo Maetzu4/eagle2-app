@@ -72,6 +72,9 @@ model servicio {
   planilla        Int         
   sello           Int         
   fecharegistro   DateTime @default(now())
+  estado          State
+  observacion     String
+  diferencia      Int
   B_100000        Int?
   B_50000         Int?
   B_20000         Int?
