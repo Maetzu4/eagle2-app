@@ -115,11 +115,11 @@ interface CheckinLlegadasProps {
 const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
   const texto = "Cerrar sesión";
   const [usuarios, setUsuarios] = useState<usuarios[]>([]);
+  const [rol, setRol] = useState("");
   const [checkin, setCheckin] = useState<Checkin[]>([]);
   const [clientes, setClientes] = useState<Clientes[]>([]);
   const [fondos, setFondos] = useState<Fondo[]>([]);
   const [formData, setFormData] = useState<Checkin>({
-    //idCheckin:0,
     planilla: 0,
     sello: 0,
     clienteID: 0,
@@ -191,6 +191,7 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
         if (!usuariosRes.ok) throw new Error("Error al cargar usuarios");
         const usuariosData = await usuariosRes.json();
         setUsuarios(usuariosData);
+
       } catch (err) {
         console.error("Error al cargar los datos:", err);
       }
@@ -198,6 +199,15 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    // Este efecto se ejecutará cuando los usuarios se hayan cargado
+    if (usuarios.length > 0) {
+      const role = usuarios.find((checkinero) => checkinero.email === user.user.email)?.role;
+      setRol(role); // Establecer el rol
+      console.log(role);
+    }
+  }, [usuarios, user.user.email]); 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -321,7 +331,9 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
           <nav>
             <ul className="flex space-x-4">
               <li>
-                <LogOutBtn text={texto} />
+                {rol === "checkinero" && (
+                  <LogOutBtn text={texto} />
+                )}
               </li>
             </ul>
           </nav>
@@ -331,7 +343,8 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
       <main className="container mx-auto p-6">
 
         {/* Formulario */}
-        <Card className="bg-white p-6 rounded-lg shadow">
+        {rol === "checkinero" && (
+          <Card className="bg-white p-6 rounded-lg shadow">
           <form onSubmit={handleSubmit}>
             <h2 className="text-2xl font-bold mb-6 text-gray-800">
               Check-in
@@ -414,6 +427,7 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
             </div>
           </form>
         </Card>
+        )}
 
         {/* Tabla de registros */}
         <Card className="bg-white p-6 rounded-lg shadow mt-6">
@@ -452,12 +466,14 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
                     {usuarios.find((checkinero) => check.checkinero.usuario_id === checkinero.idUsuario)?.name}
                   </TableCell>
                   <TableCell>
-                    <Button
+                    {rol === "checkinero" && (
+                      <Button
                       onClick={() => handleEdit(check)}
                       className="bg-cyan-700 hover:bg-cyan-900"
                     >
                       Editar
                     </Button>
+                    )}
                     <Button
                       onClick={() => handleDelete(check.idCheckin!)}
                       className="bg-red-600 hover:bg-red-800"

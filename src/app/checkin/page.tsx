@@ -20,7 +20,7 @@ async function CheckinLlegadasContainer() {
     </div>
   }
 
-  if (session?.user?.role !== "checkinero") {
+  if (session?.user?.role !== "checkinero" && session?.user?.role !== "digitador") {
     texto = "Volver para iniciar sesión"
     return <div className="flex flex-col justify-center items-center h-screen bg-gradient-to-bl from-slate-400 to-cyan-800 space-y-20">
     <div className="text-center">
