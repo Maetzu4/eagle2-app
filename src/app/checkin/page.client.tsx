@@ -247,6 +247,7 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
       const checkinData = {
         ...formData,
         fechaRegistro: formData.fechaRegistro.toISOString(),
+        
       };
 
       const method = formData.idCheckin ? "PUT" : "POST"; // Usar PUT si hay un ID
@@ -262,15 +263,10 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
         throw new Error("Error en la solicitud");
       }
 
-      const result = await res.json();
-      console.log(result);
-
     } catch (error) {
       console.error("Error al enviar el formulario:", error);
     }
   };
-
-
 
   const handleEdit = (checkin: Checkin) => {
     setFormData({
@@ -319,7 +315,7 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
     <div className="min-h-screen bg-gradient-to-bl from-slate-400 to-cyan-800">
       <header className="bg-transparent text-white top-0 z-50 p-6">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-3xl font-bold">
+          <h1 className="text-4xl font-bold">
             Bienvenido, {user.user.name}
           </h1>
           <nav>
@@ -337,8 +333,8 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
         {/* Formulario */}
         <Card className="bg-white p-6 rounded-lg shadow">
           <form onSubmit={handleSubmit}>
-            <h2 className="text-xl font-bold mb-6 text-gray-800">
-              Formulario de Check-in
+            <h2 className="text-2xl font-bold mb-6 text-gray-800">
+              Check-in
             </h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
@@ -458,7 +454,7 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
                   <TableCell>
                     <Button
                       onClick={() => handleEdit(check)}
-                      className="mr-2 bg-blue-600 hover:bg-blue-800"
+                      className="bg-cyan-700 hover:bg-cyan-900"
                     >
                       Editar
                     </Button>

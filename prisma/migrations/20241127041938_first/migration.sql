@@ -6,6 +6,7 @@ CREATE TABLE `usuario` (
     `email` VARCHAR(191) NOT NULL,
     `password` VARCHAR(191) NOT NULL,
     `status` ENUM('Activo', 'Inactivo') NOT NULL,
+    `role` ENUM('checkinero', 'digitador', 'operario') NOT NULL,
     `Sede` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -20,9 +21,7 @@ CREATE TABLE `cliente` (
     `name` VARCHAR(191) NULL,
     `sede` VARCHAR(191) NOT NULL,
     `fondoId` INTEGER NOT NULL,
-    `checkin_id` INTEGER NOT NULL,
 
-    UNIQUE INDEX `cliente_checkin_id_key`(`checkin_id`),
     PRIMARY KEY (`idCliente`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -31,6 +30,7 @@ CREATE TABLE `checkin` (
     `idCheckin` INTEGER NOT NULL AUTO_INCREMENT,
     `planilla` INTEGER NOT NULL,
     `sello` INTEGER NOT NULL,
+    `clienteId` INTEGER NOT NULL,
     `declarado` INTEGER NOT NULL,
     `ruta_llegada` INTEGER NOT NULL,
     `fechaRegistro` DATETIME(3) NOT NULL,
@@ -53,6 +53,7 @@ CREATE TABLE `servicio` (
     `B_5000` INTEGER NULL,
     `B_2000` INTEGER NULL,
     `Sum_B` INTEGER NOT NULL,
+    `clienteId` INTEGER NOT NULL,
     `checkin_id` INTEGER NOT NULL,
     `checkineroId` INTEGER NOT NULL,
     `fondoId` INTEGER NOT NULL,
@@ -65,6 +66,7 @@ CREATE TABLE `servicio` (
 -- CreateTable
 CREATE TABLE `fondo` (
     `idFondo` INTEGER NOT NULL AUTO_INCREMENT,
+    `nombre` VARCHAR(191) NOT NULL,
     `tipo` ENUM('Publico', 'Privado') NOT NULL,
 
     PRIMARY KEY (`idFondo`)
@@ -116,13 +118,16 @@ CREATE TABLE `digitador` (
 ALTER TABLE `cliente` ADD CONSTRAINT `cliente_fondoId_fkey` FOREIGN KEY (`fondoId`) REFERENCES `fondo`(`idFondo`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `cliente` ADD CONSTRAINT `cliente_checkin_id_fkey` FOREIGN KEY (`checkin_id`) REFERENCES `checkin`(`idCheckin`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `checkin` ADD CONSTRAINT `checkin_clienteId_fkey` FOREIGN KEY (`clienteId`) REFERENCES `cliente`(`idCliente`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `checkin` ADD CONSTRAINT `checkin_checkineroId_fkey` FOREIGN KEY (`checkineroId`) REFERENCES `checkinero`(`idCheckinero`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `checkin` ADD CONSTRAINT `checkin_fondoId_fkey` FOREIGN KEY (`fondoId`) REFERENCES `fondo`(`idFondo`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `servicio` ADD CONSTRAINT `servicio_clienteId_fkey` FOREIGN KEY (`clienteId`) REFERENCES `cliente`(`idCliente`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `servicio` ADD CONSTRAINT `servicio_checkin_id_fkey` FOREIGN KEY (`checkin_id`) REFERENCES `checkin`(`idCheckin`) ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -36,16 +36,29 @@ export default function Login() {
 
   const onSubmit = async (data: LoginFormValues) => {
     setError(null);
-    startTransition(async () =>{
+    startTransition(async () => {
       const response = await LoginAction(data);
-
+  
       if (response.error) {
-        setError(response.error)
+        setError(response.error);
       } else {
-        router.push("/checkin")
+        // Obtener el token del usuario para verificar su rol
+        const session = await fetch("/api/auth/session").then((res) => res.json());
+        const role = session?.user?.role;
+  
+        if (role === "digitador") {
+          router.push("/digitador");
+        } else if (role === "checkinero") {
+          router.push("/checkin");
+        } else if (role === "operario") {
+          router.push("/operario");
+        } else {
+          setError("No tiene un rol válido asignado.");
+        }
       }
-    })
+    });
   };
+  
 
   return (
     <div className="flex items-center justify-center h-screen bg-gradient-to-bl from-slate-400 to-cyan-800 gap-60">

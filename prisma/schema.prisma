@@ -48,6 +48,7 @@ model cliente {
   fondoId         Int
   fondo           fondo   @relation(fields: [fondoId], references: [idFondo])    
   checkin         checkin[]
+  servicio        servicio[]
 }
 
 model checkin {
@@ -68,7 +69,6 @@ model checkin {
 
 model servicio {
   idServicio      Int      @id @default(autoincrement())
-  //planilla y sello vienen de checkin
   planilla        Int         
   sello           Int         
   fecharegistro   DateTime @default(now())
@@ -80,6 +80,8 @@ model servicio {
   B_2000          Int?
   Sum_B           Int
   fechaCierre     fecha_cierre?
+  clienteId       Int
+  clientes        cliente     @relation(fields: [clienteId], references: [idCliente])
   checkin_id      Int         @unique
   checkin         checkin     @relation(fields: [checkin_id], references: [idCheckin])
   checkineroId    Int
