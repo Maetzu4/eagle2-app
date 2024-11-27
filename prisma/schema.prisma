@@ -7,122 +7,132 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model note {
-  id              Int      @id @default(autoincrement())
-  num_factura     String?
-  sello           String?
-  valor_declarado String?
-  ruta_llegada    String?
-  fecha_registro  DateTime @default(now())
+enum State {
+  Activo
+  Inactivo
 }
 
-model checkin {
-  id              Int      @id @default(autoincrement())
-  num_factura     String?
-  sello           String?
-  valor_declarado String?
-  ruta_llegada    String?
-  fecha_registro  DateTime @default(now())
-  userId          String   @unique(map: "Checkin_userId_key")
-  clienteId       Int
-  cliente         cliente  @relation(fields: [clienteId], references: [id], map: "Checkin_clienteId_fkey")
-  user            user     @relation(fields: [userId], references: [id], map: "Checkin_userId_fkey")
+enum Fondo {
+  Publico
+  Privado
+}
 
-  @@index([clienteId], map: "Checkin_clienteId_fkey")
+enum Role {
+  checkinero
+  digitador
+  operario
+}
+
+model usuario {
+  idUsuario       Int     @id @default(autoincrement())
+  name            String?
+  lastname        String?
+  email           String  @unique
+  password        String
+  status          State
+  //roles
+  role            Role
+  checkinero      checkinero?
+  operario        operario?
+  digitador       digitador?
+
+  Sede            String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now())
 }
 
 model cliente {
-  id          Int          @id @default(autoincrement())
-  nom_cliente String
-  tipo        cliente_tipo
-  fondoId     Int
-  checkin     checkin[]
-  fondo       fondo        @relation(fields: [fondoId], references: [id], map: "Cliente_fondoId_fkey")
-
-  @@index([fondoId], map: "Cliente_fondoId_fkey")
+  idCliente       Int     @id @default(autoincrement())
+  name            String?
+  sede            String
+  fondoId         Int
+  fondo           fondo   @relation(fields: [fondoId], references: [idFondo])    
+  checkin         checkin[]
 }
 
-model digitador {
-  id             Int          @id @default(autoincrement())
-  fecha_cierre   DateTime?
-  valor_revisado String?
-  fecha_certif   DateTime?
-  userId         String       @unique(map: "Digitador_userId_key")
-  user           user         @relation(fields: [userId], references: [id], map: "Digitador_userId_fkey")
-  fechcierre     fechcierre[]
-}
-
-model fechcierre {
-  id                     Int       @id @default(autoincrement())
-  fecha_a_cerrar         DateTime?
-  planilla               String?
-  valor_total_verificado String?
-  fecha_certificacion    DateTime?
-  fondoId                Int
-  digitadorId            Int
-  digitador              digitador @relation(fields: [digitadorId], references: [id], map: "FechCierre_digitadorId_fkey")
-  fondo                  fondo     @relation(fields: [fondoId], references: [id], map: "FechCierre_fondoId_fkey")
-
-  @@index([digitadorId], map: "FechCierre_digitadorId_fkey")
-  @@index([fondoId], map: "FechCierre_fondoId_fkey")
-}
-
-model fondo {
-  id          Int          @id @default(autoincrement())
-  nom_cliente String
-  tipo        fondo_tipo
-  cliente     cliente[]
-  fechcierre  fechcierre[]
+model checkin {
+  idCheckin       Int         @id @default(autoincrement())
+  planilla        Int
+  sello           Int
+  clienteId       Int
+  clientes        cliente     @relation(fields: [clienteId], references: [idCliente])
+  declarado       Int
+  ruta_llegada    Int
+  fechaRegistro   DateTime
+  checkineroId    Int
+  checkinero      checkinero  @relation(fields: [checkineroId], references: [idCheckinero])
+  fondoId         Int
+  fondo           fondo       @relation(fields: [fondoId], references: [idFondo])
+  servicio        servicio?
 }
 
 model servicio {
-  id              Int      @id @default(autoincrement())
-  numero_planilla String?
-  fecha_registro  DateTime @default(now())
-  billetes_100000 Int?
-  billetes_50000  Int?
-  billetes_20000  Int?
-  billetes_10000  Int?
-  billetes_5000   Int?
-  billetes_2000   Int?
-  billetes_1000   Int?
-  total_valor     String?
+  idServicio      Int      @id @default(autoincrement())
+  //planilla y sello vienen de checkin
+  planilla        Int         
+  sello           Int         
+  fecharegistro   DateTime @default(now())
+  B_100000        Int?
+  B_50000         Int?
+  B_20000         Int?
+  B_10000         Int?
+  B_5000          Int?
+  B_2000          Int?
+  Sum_B           Int
+  fechaCierre     fecha_cierre?
+  checkin_id      Int         @unique
+  checkin         checkin     @relation(fields: [checkin_id], references: [idCheckin])
+  checkineroId    Int
+  checkinero      checkinero  @relation(fields: [checkineroId], references: [idCheckinero])
+  fondoId         Int
+  fondo           fondo       @relation(fields: [fondoId], references: [idFondo])
+  operarioId      Int
+  operario        operario    @relation(fields: [operarioId], references: [idOperario])
 }
 
-model user {
-  id        String      @id
-  username  String      @unique(map: "User_username_key")
-  email     String      @unique(map: "User_email_key")
-  password  String
-  name      String
-  lastName  String
-  cod_sed   String
-  role      user_role   @default(Admin)
-  status    user_status @default(Activo)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime
-  checkin   checkin?
-  digitador digitador?
+model fondo {
+  idFondo         Int         @id @default(autoincrement())
+  nombre          String
+  tipo            Fondo
+  clientes        cliente[]
+  checkins        checkin[]
+  servicios       servicio[]
+  fecha_de_cierre fecha_cierre[]
 }
 
-enum cliente_tipo {
-  Premium
-  Basico
+model fecha_cierre {
+  idFechaCierre   Int         @id @default(autoincrement())
+  //viene de checkin y servicio
+  planilla        Int
+  fecha_a_cerrar  DateTime
+  digitadorId     Int
+  digitador       digitador  @relation(fields: [digitadorId], references: [idDigitador])
+  fondoId         Int
+  fondo           fondo       @relation(fields: [fondoId], references: [idFondo])
+  servicioId      Int         @unique
+  servicio        servicio    @relation(fields: [servicioId], references: [idServicio])
 }
 
-enum fondo_tipo {
-  Tipo1
-  Tipo2
+model checkinero {
+  idCheckinero       Int     @id @default(autoincrement())
+  checkin           checkin[]
+  servicio           servicio[]
+  usuario_id Int?     @unique
+  usuario    usuario? @relation(fields: [usuario_id], references: [idUsuario])
 }
 
-enum user_role {
-  Admin
-  Checkinero
-  Operario
-  Digitador
+model operario{
+  idOperario Int     @id @default(autoincrement())
+  Servicio           servicio[]
+  usuario_id Int?     @unique
+  Usuario    usuario? @relation(fields: [usuario_id], references: [idUsuario])
 }
 
-enum user_status {
-  Activo
-  Inactivo
+model digitador {
+  idDigitador   Int     @id @default(autoincrement())
+  fecha_cierre  DateTime
+  revisado      Int
+  f_cierre      fecha_cierre[]
+  usuario_id    Int?     @unique
+  usuario       usuario? @relation(fields: [usuario_id], references: [idUsuario])
 }

@@ -6,8 +6,9 @@ export async function GET() {
   try {
     const fondos = await prisma.fondo.findMany({
       select: {
-        id: true,
-        nom_cliente: true,
+        idFondo: true,
+        nombre: true,
+        clientes: true,
       },
     });
 

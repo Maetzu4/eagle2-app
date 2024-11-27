@@ -10,8 +10,8 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export const LoginAction = async (data: LoginFormValues) => {
   try {
     await signIn("credentials", {
-      usuario: data.usuario,
-      contrasena: data.contrasena,
+      email: data.email,
+      password: data.password,
       redirect: false,
     });
 

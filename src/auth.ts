@@ -17,26 +17,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           throw new Error("Invalid credentials");
         }
 
-        const user = await prisma.user.findUnique({
+        const usuario = await prisma.usuario.findUnique({
           where: {
-            username: data.usuario,
+            email: data.email,
           },
         });
 
-        if (!user || !user.password) {
-          throw new Error("Credenciales invalida  s");
+        if (!usuario || !usuario.password) {
+          throw new Error("Credenciales invalida");
         }
 
-        const isValidPassword = (await data.contrasena) === user.password;
+        const isValidPassword = (await data.password) === usuario.password;
         //const isValidPassword = await bcrypt.compare(data.contrasena, user.password);
 
         if (!isValidPassword) {
           throw new Error("Credenciales invalidas");
         }
 
-        return { id: user.id, name: user.name, lastName:user.lastName, email: user.email, role: user.role };
-
-        //return user;
+        return usuario;
       },
     }),
   ],

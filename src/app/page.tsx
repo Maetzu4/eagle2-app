@@ -29,8 +29,8 @@ export default function Login() {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      usuario: "",
-      contrasena: "",
+      email: "",
+      password: "",
     },
   });
 
@@ -62,12 +62,12 @@ export default function Login() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-6">
             <FormField
               control={form.control}
-              name="usuario"
+              name="email"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-gray-700">Usuario:</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ingresa tu usuario" {...field} />
+                    <Input type="email" placeholder="Ingresa tu usuario" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -75,7 +75,7 @@ export default function Login() {
             />
             <FormField
               control={form.control}
-              name="contrasena"
+              name="password"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-gray-700">Contraseña:</FormLabel>

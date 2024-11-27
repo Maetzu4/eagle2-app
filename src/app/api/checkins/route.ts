@@ -8,27 +8,18 @@ export async function POST(req: Request) {
     const data = await req.json();
     console.log("Datos recibidos:", data);
 
-    // Validar campos obligatorios
-    if (!data.userId || !data.clienteId) {
-      return NextResponse.json(
-        { message: "Faltan campos obligatorios" },
-        { status: 400 }
-      );
-    }
-
-    // Preparar los datos para guardar
-    const checkinData = {
-      num_factura: data.num_factura || null,
-      sello: data.sello || null,
-      valor_declarado: data.valor_declarado || null,
-      ruta_llegada: data.ruta_llegada || null,
-      userId: data.userId,
-      clienteId: data.clienteId,
-    };
-
-    // Guardar en la base de datos
+    // Asegúrate de manejar las relaciones correctamente en Prisma
     const newCheckin = await prisma.checkin.create({
-      data: checkinData,
+      data: {
+        planilla: data.planilla,
+        sello: data.sello,
+        declarado: data.declarado,
+        ruta_llegada: data.ruta_llegada,
+        fechaRegistro: new Date(data.fechaRegistro), // Asegúrate de convertir la fecha correctamente
+        checkineroId: data.checkineroId,
+        fondoId: data.fondoId,
+        clienteId: data.clienteID,
+      },
     });
 
     // Responder con los datos guardados
@@ -40,7 +31,6 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         message: "Error al guardar el check-in",
-        //error: error.message,
       },
       { status: 500 }
     );
@@ -52,11 +42,22 @@ export async function POST(req: Request) {
 export async function GET() {
   try {
     const checkins = await prisma.checkin.findMany({
-      include: {
-        user: true,
-        cliente: true,
+      select: {
+        idCheckin: true,
+        planilla: true,
+        sello: true,
+        clientes: true,
+        declarado: true,
+        ruta_llegada: true,
+        fechaRegistro: true,
+        checkineroId: true,
+        checkinero: true,
+        fondoId: true,
+        fondo: true,
+        servicio: true,
       },
     });
+
     return NextResponse.json(checkins, { status: 200 });
   } catch (error) {
     return NextResponse.json(
@@ -68,14 +69,33 @@ export async function GET() {
 
 // Actualizar un registro
 export async function PUT(req: Request) {
-  const { id, ...data } = await req.json();
   try {
+    const body = await req.json();
+    const { idCheckin, planilla, sello, declarado, ruta_llegada, clienteID, fondoId } = body;
+
+    if (!idCheckin) {
+      return NextResponse.json(
+        { error: "El ID del check-in es requerido" },
+        { status: 400 }
+      );
+    }
+
     const updatedCheckin = await prisma.checkin.update({
-      where: { id },
-      data,
+      where: { idCheckin },
+      data: {
+        planilla,
+        sello,
+        declarado,
+        ruta_llegada,
+        clienteId: clienteID,
+        fondoId,
+        fechaRegistro: new Date(), // Opcional: actualizar la fecha de registro
+      },
     });
+
     return NextResponse.json(updatedCheckin, { status: 200 });
   } catch (error) {
+    console.error("Error al actualizar el check-in:", error);
     return NextResponse.json(
       { error: "Error al actualizar el check-in" },
       { status: 500 }
@@ -83,21 +103,29 @@ export async function PUT(req: Request) {
   }
 }
 
+
 // Eliminar un registro
 export async function DELETE(req: Request) {
-  const { id } = await req.json();
   try {
-    await prisma.checkin.delete({
-      where: { id },
+    const { id } = await req.json();
+
+    // Validar que se envió el ID
+    if (!id) {
+      return NextResponse.json({ error: "ID es requerido" }, { status: 400 });
+    }
+
+    // Eliminar el registro de la base de datos
+    const deletedCheckin = await prisma.checkin.delete({
+      where: { idCheckin: id },
     });
-    return NextResponse.json(
-      { message: "Check-in eliminado" },
-      { status: 200 }
-    );
+
+    return NextResponse.json(deletedCheckin, { status: 200 });
   } catch (error) {
+    console.error("Error al eliminar el check-in:", error);
     return NextResponse.json(
       { error: "Error al eliminar el check-in" },
       { status: 500 }
     );
   }
 }
+

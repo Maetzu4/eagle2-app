@@ -3,18 +3,24 @@ import { prisma } from "@/lib/prisma"; // Asegúrate de tener prisma en la carpe
 
 export async function GET() {
   try {
-    const clientes = await prisma.cliente.findMany({
+    const usuarios = await prisma.usuario.findMany({
       select: {
-        idCliente: true,
+        idUsuario: true,
         name: true,
-        sede: true,
-        fondoId: true,
-        fondo: true,
-        checkin: true,
+        lastname: true,
+        email: true,
+        status: true,
+        //roles
+        role: true,
+        checkinero: true,
+        operario: true,
+        digitador: true,
+
+        Sede: true,
       },
     });
 
-    return NextResponse.json(clientes);
+    return NextResponse.json(usuarios);
   } catch (error) {
     console.error("Error al obtener clientes:", error);
     return NextResponse.json(
