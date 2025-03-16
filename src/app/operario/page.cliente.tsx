@@ -16,76 +16,76 @@ import { Minus, Plus } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 interface Checkin {
-  idCheckin?: number,
-  planilla: number,
-  sello: number,
-  clienteId: number,
+  idCheckin?: number;
+  planilla: number;
+  sello: number;
+  clienteId: number;
   clientes: {
-    idCliente: number,
-    name: string,
-    sede: string,
-    fondoId: number,
-    checkin_id: number
-  },
-  declarado: number,
-  ruta_llegada: number,
-  fechaRegistro: Date,
-  checkineroId: number,
+    idCliente: number;
+    name: string;
+    sede: string;
+    fondoId: number;
+    checkin_id: number;
+  };
+  declarado: number;
+  ruta_llegada: number;
+  fechaRegistro: Date;
+  checkineroId: number;
   checkinero: {
-    idCheckinero: number,
-    usuario_id: number
-  },
-  fondoId: number,
+    idCheckinero: number;
+    usuario_id: number;
+  };
+  fondoId: number;
   fondo: {
-    idFondo: number,
-    nombre: string,
-    tipo: string
-  },
-  servicio: servicio,
+    idFondo: number;
+    nombre: string;
+    tipo: string;
+  };
+  servicio: servicio;
 }
 
 interface servicio {
-  idServicio?: number,
-  planilla?: number,
-  sello?: number,
-  fecharegistro: Date,
-  estado: string,
-  clienteId?: number,
-  observacion: string,
-  diferencia: number,
-  B_100000: number,
-  B_50000: number,
-  B_20000: number,
-  B_10000: number,
-  B_5000: number,
-  B_2000: number,
-  Sum_B: number,
-  checkin_id: number,
-  checkineroId: number,
-  fondoId: number,
-  operarioId: number
+  idServicio?: number;
+  planilla?: number;
+  sello?: number;
+  fecharegistro: Date;
+  estado: string;
+  clienteId?: number;
+  observacion: string;
+  diferencia: number;
+  B_100000: number;
+  B_50000: number;
+  B_20000: number;
+  B_10000: number;
+  B_5000: number;
+  B_2000: number;
+  Sum_B: number;
+  checkin_id: number;
+  checkineroId: number;
+  fondoId: number;
+  operarioId: number;
 }
 
 interface usuarios {
-  idUsuario: number,
-  name: string,
-  lastname: string,
-  email: string,
-  status: string,
-  role: string,
+  idUsuario: number;
+  name: string;
+  lastname: string;
+  email: string;
+  status: string;
+  role: string;
   checkinero: {
-    idCheckinero: number,
-    usuario_id: number
-  },
+    idCheckinero: number;
+    usuario_id: number;
+  };
   operario: {
-    idOperario: number,
-    usuario_id: number
-  },
+    idOperario: number;
+    usuario_id: number;
+  };
   digitador: {
-    idDigitador: number,
-    usuario_id: number
-  },
-  Sede: string
+    idDigitador: number;
+    usuario_id: number;
+  };
+  Sede: string;
 }
 
 interface Session {
@@ -109,8 +109,8 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
   const [usuarios, setUsuarios] = useState<usuarios[]>([]);
   const [formData, setFormData] = useState<servicio>({
     Sum_B: 0,
-    estado: '',
-    observacion: '',
+    estado: "",
+    observacion: "",
     diferencia: 0,
     fecharegistro: new Date(),
     B_100000: 0,
@@ -130,27 +130,21 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
   ) => {
     const { name, value } = e.target;
 
-    setFormData((prev) => {
-      return {
-        ...prev,
-        [name]: value,
-      }
-    })
+    // Encuentra el operario en línea
+    const operarioEnLinea = usuarios.find(
+      (operario) => operario.email === user.user.email
+    )?.operario;
 
-    setFormData((prev) => {
-      const operarioEnLinea = usuarios.find((operario) => operario.email === user.user.email)?.operario;
-      return {
-        ...prev,
-        operarioId: operarioEnLinea?.idOperario,
-      };
-    });
-
-  }
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+      operarioId: operarioEnLinea?.idOperario || prev.operarioId, // Actualiza el operarioId si es necesario
+    }));
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-
     const { name, value } = e.target;
 
     const numericValue = parseInt(value, 10);
@@ -174,7 +168,12 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
     });
   };
 
-  const handleIncrement = (denom: string) => {
+  const handleIncrement = (
+    denom: keyof Pick<
+      servicio,
+      "B_100000" | "B_50000" | "B_20000" | "B_10000" | "B_5000" | "B_2000"
+    >
+  ) => {
     setFormData((prev) => {
       const updatedFormData = {
         ...prev,
@@ -195,8 +194,12 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
     });
   };
 
-
-  const handleDecrement = (denom: string) => {
+  const handleDecrement = (
+    denom: keyof Pick<
+      servicio,
+      "B_100000" | "B_50000" | "B_20000" | "B_10000" | "B_5000" | "B_2000"
+    >
+  ) => {
     setFormData((prev) => {
       const updatedFormData = {
         ...prev,
@@ -217,12 +220,10 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
     });
   };
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     setError(null);
     e.preventDefault();
     try {
-
       if (formData.planilla === 0) {
         setError("el numero de planilla debe ser mayor a 0");
         return;
@@ -230,9 +231,9 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
 
       const serviceData = {
         ...formData,
-        planilla: checkin?.planilla || 0,        // Valor del checkin
-        sello: checkin?.sello || 0,             // Valor del checkin
-        estado: "Inactivo",    // Default: Activo
+        planilla: checkin?.planilla || 0, // Valor del checkin
+        sello: checkin?.sello || 0, // Valor del checkin
+        estado: "Inactivo", // Default: Activo
         observacion: formData.observacion || "",
 
         // Valores relacionados con billetes
@@ -268,16 +269,17 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
       if (!res.ok) {
         throw new Error("Error en la solicitud");
       }
-
     } catch (error) {
       console.error("Error al enviar el formulario:", error);
     }
   };
 
   const consultar = async () => {
-    setError(null)
+    setError(null);
     try {
-      const response = await fetch(`/api/checkin?planilla=${formData.planilla}`);
+      const response = await fetch(
+        `/api/checkin?planilla=${formData.planilla}`
+      );
 
       if (!response.ok) {
         setError("La planilla debe ser válida");
@@ -289,7 +291,7 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
       // Validar el estado del servicio directamente desde la respuesta
       if (data?.servicio?.estado === "Inactivo") {
         setError("Conteo cerrado, no esta permitido hacer cambios");
-        setIsDisabled2(true)
+        setIsDisabled2(true);
       }
 
       // Asignar el checkin obtenido al estado
@@ -315,7 +317,6 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
         if (!checkinsRes.ok) throw new Error("Error al cargar check-ins");
         const checkinsData = await checkinsRes.json();
         setCheckin(checkinsData);
-
       } catch (err) {
         console.error("Error al cargar los datos:", err);
       }
@@ -338,8 +339,15 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
 
       setFormData((prev) => ({ ...prev, Sum_B: initialSum_B, diferencia }));
     }
-  }, [checkin]);
-
+  }, [
+    checkin,
+    formData.B_100000,
+    formData.B_50000,
+    formData.B_20000,
+    formData.B_10000,
+    formData.B_5000,
+    formData.B_2000,
+  ]);
 
   return (
     <div className="min-h-screen bg-gradient-to-bl from-slate-400 to-cyan-800">
@@ -363,14 +371,17 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
               Factura de detallado de cliente
             </h2>
             {error && (
-              <p className="mt-4 text-sm text-red-500 text-center font-semibold">{error}</p>
+              <p className="mt-4 text-sm text-red-500 text-center font-semibold">
+                {error}
+              </p>
             )}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mb-8">
               <div className="items-center gap-4">
                 <div className="flex-1">
                   <label
                     htmlFor="planilla"
-                    className="block text-sm font-medium text-gray-600">
+                    className="block text-sm font-medium text-gray-600"
+                  >
                     Número de Planilla:
                   </label>
                 </div>
@@ -387,7 +398,8 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                   <Button
                     type="button"
                     onClick={consultar}
-                    className="bg-cyan-700 hover:bg-cyan-900">
+                    className="bg-cyan-700 hover:bg-cyan-900"
+                  >
                     Consultar
                   </Button>
                 </div>
@@ -407,13 +419,15 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                   name="name"
                   className="border p-2 w-full"
                   value={checkin?.clientes?.name?.replace("_", " ") || ""}
-                  readOnly />
+                  readOnly
+                />
               </div>
 
               <div>
                 <label
                   htmlFor="sello"
-                  className="block text-sm font-medium text-gray-600">
+                  className="block text-sm font-medium text-gray-600"
+                >
                   Sello de la Factura:
                 </label>
                 <input
@@ -454,8 +468,12 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                 <Table className="w-full mt-4 border border-gray-300">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="px-4 py-2 text-left">Denominación</TableHead>
-                      <TableHead className="px-4 py-2 text-left">Cantidad</TableHead>
+                      <TableHead className="px-4 py-2 text-left">
+                        Denominación
+                      </TableHead>
+                      <TableHead className="px-4 py-2 text-left">
+                        Cantidad
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -468,7 +486,8 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDecrement("B_100000")}>
+                          onClick={() => handleDecrement("B_100000")}
+                        >
                           <Minus />
                         </Button>
                         <input
@@ -476,7 +495,9 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                           type="number"
                           name="B_100000"
                           className="border p-1 w-16 text-center"
-                          value={checkin?.servicio?.B_100000 || formData.B_100000}
+                          value={
+                            checkin?.servicio?.B_100000 || formData.B_100000
+                          }
                           onChange={handleInputChange}
                         />
                         <Button
@@ -484,7 +505,8 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => handleIncrement("B_100000")}>
+                          onClick={() => handleIncrement("B_100000")}
+                        >
                           <Plus />
                         </Button>
                       </TableCell>
@@ -498,7 +520,8 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDecrement("B_50000")}>
+                          onClick={() => handleDecrement("B_50000")}
+                        >
                           <Minus />
                         </Button>
                         <input
@@ -514,7 +537,8 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => handleIncrement("B_50000")}>
+                          onClick={() => handleIncrement("B_50000")}
+                        >
                           <Plus />
                         </Button>
                       </TableCell>
@@ -528,7 +552,8 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDecrement("B_20000")}>
+                          onClick={() => handleDecrement("B_20000")}
+                        >
                           <Minus />
                         </Button>
                         <input
@@ -544,7 +569,8 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => handleIncrement("B_20000")}>
+                          onClick={() => handleIncrement("B_20000")}
+                        >
                           <Plus />
                         </Button>
                       </TableCell>
@@ -558,7 +584,8 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDecrement("B_10000")}>
+                          onClick={() => handleDecrement("B_10000")}
+                        >
                           <Minus />
                         </Button>
                         <input
@@ -574,7 +601,8 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => handleIncrement("B_10000")}>
+                          onClick={() => handleIncrement("B_10000")}
+                        >
                           <Plus />
                         </Button>
                       </TableCell>
@@ -588,7 +616,8 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDecrement("B_5000")}>
+                          onClick={() => handleDecrement("B_5000")}
+                        >
                           <Minus />
                         </Button>
                         <input
@@ -604,7 +633,8 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => handleIncrement("B_5000")}>
+                          onClick={() => handleIncrement("B_5000")}
+                        >
                           <Plus />
                         </Button>
                       </TableCell>
@@ -618,7 +648,8 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDecrement("B_2000")}>
+                          onClick={() => handleDecrement("B_2000")}
+                        >
                           <Minus />
                         </Button>
                         <input
@@ -634,14 +665,17 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => handleIncrement("B_2000")}>
+                          onClick={() => handleIncrement("B_2000")}
+                        >
                           <Plus />
                         </Button>
                       </TableCell>
                     </TableRow>
                     {/* Fila para el total */}
                     <TableRow>
-                      <TableCell className="px-4 py-2 font-bold">Total</TableCell>
+                      <TableCell className="px-4 py-2 font-bold">
+                        Total
+                      </TableCell>
                       <TableCell className="px-4 py-2">
                         <input
                           disabled={isDisabled2}
@@ -654,12 +688,18 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                     </TableRow>
                     {/* Fila para la diferencia */}
                     <TableRow>
-                      <TableCell className="px-4 py-2 font-bold">Diferencia</TableCell>
+                      <TableCell className="px-4 py-2 font-bold">
+                        Diferencia
+                      </TableCell>
                       <TableCell className="px-4 py-2">
                         <input
                           disabled={isDisabled2}
                           type="text"
-                          value={checkin?.servicio?.diferencia || formData.diferencia || 0}
+                          value={
+                            checkin?.servicio?.diferencia ||
+                            formData.diferencia ||
+                            0
+                          }
                           readOnly
                           className="border p-1 w-full text-center"
                         />
@@ -668,7 +708,10 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                     {/* Fila para la observación */}
                     <TableRow>
                       <TableCell colSpan={2} className="px-4 py-2">
-                        <label htmlFor="observacion" className="block font-bold mb-2">
+                        <label
+                          htmlFor="observacion"
+                          className="block font-bold mb-2"
+                        >
                           Observación:
                         </label>
                         <Textarea
@@ -676,8 +719,12 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                           id="observacion"
                           name="observacion"
                           className="border p-2 w-full"
-                          value={checkin?.servicio?.observacion || formData.observacion}
-                          onChange={handleTextChange} />
+                          value={
+                            checkin?.servicio?.observacion ||
+                            formData.observacion
+                          }
+                          onChange={handleTextChange}
+                        />
                       </TableCell>
                     </TableRow>
                   </TableBody>
@@ -689,7 +736,8 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
               <Button
                 disabled={isDisabled2}
                 type="submit"
-                className="bg-cyan-700 hover:bg-cyan-900">
+                className="bg-cyan-700 hover:bg-cyan-900"
+              >
                 Guardar y cerrar
               </Button>
             </div>
@@ -698,6 +746,6 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
       </main>
     </div>
   );
-}
+};
 
 export default IngresoFactura;
