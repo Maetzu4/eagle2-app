@@ -36,11 +36,11 @@ export async function POST(req: Request) {
       !checkin_id ||
       !checkineroId ||
       !fondoId ||
-      !clienteId||
+      !clienteId ||
       !operarioId
     ) {
       return NextResponse.json(
-        { error: 'Faltan campos obligatorios.' },
+        { error: "Faltan campos obligatorios." },
         { status: 400 }
       );
     }
@@ -49,12 +49,12 @@ export async function POST(req: Request) {
     const fechaRegistroValida = new Date(fecharegistro);
     if (isNaN(fechaRegistroValida.getTime())) {
       return NextResponse.json(
-        { error: 'La fecha de registro no es válida.' },
+        { error: "La fecha de registro no es válida." },
         { status: 400 }
       );
     }
 
-    console.log(data)
+    console.log(data);
 
     // Crear el registro en la base de datos
     const servicio = await prisma.servicio.create({
@@ -62,8 +62,8 @@ export async function POST(req: Request) {
         planilla,
         sello,
         fecharegistro: fechaRegistroValida,
-        estado: estado || 'Activo', // Default: 'Activo'
-        observacion: observacion || '',
+        estado: estado || "Activo", // Default: 'Activo'
+        observacion: observacion || "",
         B_100000: B_100000 || 0,
         B_50000: B_50000 || 0,
         B_20000: B_20000 || 0,
@@ -82,18 +82,17 @@ export async function POST(req: Request) {
 
     // Devolver respuesta exitosa
     return NextResponse.json(
-      { message: 'Servicio creado exitosamente', servicio },
+      { message: "Servicio creado exitosamente", servicio },
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error al crear el servicio:', error);
+    console.error("Error al crear el servicio:", error);
     return NextResponse.json(
-      { error: 'Ocurrió un error al crear el servicio.' },
+      { error: "Ocurrió un error al crear el servicio." },
       { status: 500 }
     );
   }
 }
-
 
 // Actualizar un registro
 export async function PUT(req: Request) {
@@ -109,6 +108,7 @@ export async function PUT(req: Request) {
       fondoId,
     } = body;
 
+    // Validar el ID del check-in
     if (!idCheckin) {
       return NextResponse.json(
         { error: "El ID del check-in es requerido" },
@@ -116,13 +116,25 @@ export async function PUT(req: Request) {
       );
     }
 
+    // Verificar si el check-in existe
+    const checkinExists = await prisma.checkin.findUnique({
+      where: { idCheckin },
+    });
+    if (!checkinExists) {
+      return NextResponse.json(
+        { error: "El check-in no existe" },
+        { status: 404 }
+      );
+    }
+
+    // Actualizar el check-in
     const updatedCheckin = await prisma.checkin.update({
       where: { idCheckin },
       data: {
         planilla,
         sello,
         declarado,
-        ruta_llegada,
+        rutaLlegadaId: ruta_llegada, // Cambiado a rutaLlegadaId
         clienteId: clienteID,
         fondoId,
         fechaRegistro: new Date(), // Opcional: actualizar la fecha de registro
@@ -133,7 +145,10 @@ export async function PUT(req: Request) {
   } catch (error) {
     console.error("Error al actualizar el check-in:", error);
     return NextResponse.json(
-      { error: "Error al actualizar el check-in" },
+      {
+        error: "Error al actualizar el check-in",
+        message: error instanceof Error ? error.message : "Error desconocido",
+      },
       { status: 500 }
     );
   }
