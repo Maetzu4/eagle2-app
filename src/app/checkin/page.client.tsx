@@ -99,19 +99,6 @@ interface usuarios {
 //   tipo: string;
 // }
 
-interface Session {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    lastName: string;
-  };
-}
-
-interface CheckinLlegadasProps {
-  user: Session;
-}
-
 interface CheckinLlegadasProps {
   rol: string; // Solo necesitamos el rol
 }
