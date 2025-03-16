@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Minus, Plus } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
+// Interfaces (sin cambios)
 interface Checkin {
   idCheckin?: number;
   planilla: number;
@@ -69,7 +70,6 @@ interface servicio {
 interface usuarios {
   idUsuario: number;
   name: string;
-  lastname: string;
   email: string;
   status: string;
   role: string;
@@ -88,24 +88,29 @@ interface usuarios {
   Sede: string;
 }
 
-interface Session {
+// interface Session {
+//   user: {
+//     id: string;
+//     name: string;
+//     email: string;
+//     role?: string;
+//   };
+// }
+
+interface IngresoFacturaProps {
   user: {
     id: string;
     name: string;
     email: string;
-    lastName: string;
-  };
-}
-
-interface IngresoFacturaProps {
-  user: Session;
+    role?: string;
+  }; // Ajusta la interfaz para que coincida con lo que estás pasando
 }
 
 const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
   const [error, setError] = useState<string | null>(null);
   const [checkin, setCheckin] = useState<Checkin>();
   const [isDisabled, setIsDisabled] = useState(false);
-  const [isDisabled2, setIsDisabled2] = useState(false); // Estado para deshabilitar el input
+  const [isDisabled2, setIsDisabled2] = useState(false);
   const [usuarios, setUsuarios] = useState<usuarios[]>([]);
   const [formData, setFormData] = useState<servicio>({
     Sum_B: 0,
@@ -132,7 +137,7 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
 
     // Encuentra el operario en línea
     const operarioEnLinea = usuarios.find(
-      (operario) => operario.email === user.user.email
+      (operario) => operario.email === user.email
     )?.operario;
 
     setFormData((prev) => ({
@@ -353,7 +358,8 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
     <div className="min-h-screen bg-gradient-to-bl from-slate-400 to-cyan-800">
       <header className="bg-transparent text-white top-0 z-50 p-6">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-4xl font-bold">Bienvenido, {user.user.name}</h1>
+          <h1 className="text-4xl font-bold">Bienvenido, {user.name}</h1>
+          {/* Accede directamente a user.name */}
           <nav>
             <ul className="flex space-x-4">
               <li>
