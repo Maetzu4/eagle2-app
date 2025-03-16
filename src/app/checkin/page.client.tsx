@@ -93,11 +93,11 @@ interface usuarios {
   Sede: string;
 }
 
-interface Fondo {
-  idFondo: number;
-  nombre: string;
-  tipo: string;
-}
+// interface Fondo {
+//   idFondo: number;
+//   nombre: string;
+//   tipo: string;
+// }
 
 interface Session {
   user: {
@@ -112,13 +112,15 @@ interface CheckinLlegadasProps {
   user: Session;
 }
 
-const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
+interface CheckinLlegadasProps {
+  rol: string; // Solo necesitamos el rol
+}
+
+const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ rol }) => {
   const texto = "Cerrar sesión";
   const [usuarios, setUsuarios] = useState<usuarios[]>([]);
-  const [rol, setRol] = useState("");
   const [checkin, setCheckin] = useState<Checkin[]>([]);
   const [clientes, setClientes] = useState<Clientes[]>([]);
-  const [fondos, setFondos] = useState<Fondo[]>([]);
   const [formData, setFormData] = useState<Checkin>({
     planilla: 0,
     sello: 0,
@@ -172,14 +174,6 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
         const clientesData = await clientesRes.json();
         setClientes(clientesData);
 
-        // Fetch fondos
-        const fondosRes = await fetch("/api/fondos");
-        if (!fondosRes.ok) throw new Error("Error al cargar fondos");
-        const fondosData = await fondosRes.json();
-        setFondos(fondosData);
-
-        console.log(fondos);
-
         // Fetch check-ins
         const checkinsRes = await fetch("/api/checkins");
         if (!checkinsRes.ok) throw new Error("Error al cargar check-ins");
@@ -198,17 +192,6 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
 
     fetchData();
   }, []);
-
-  useEffect(() => {
-    // Este efecto se ejecutará cuando los usuarios se hayan cargado
-    if (usuarios.length > 0) {
-      const role =
-        usuarios.find((checkinero) => checkinero.email === user.user.email)
-          ?.role ?? "";
-      setRol(role); // Establecer el rol
-      console.log(role);
-    }
-  }, [usuarios, user.user.email]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -244,17 +227,6 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
         },
       }));
     }
-
-    setFormData((prev) => {
-      const chekineroEnLinea = usuarios.find(
-        (checkinero) => checkinero.email === user.user.email
-      )?.checkinero;
-      return {
-        ...prev,
-        checkineroId: chekineroEnLinea?.idCheckinero || 0,
-        checkinero: chekineroEnLinea || prev.checkinero, // Si no se encuentra, mantiene el anterior
-      };
-    });
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -329,7 +301,7 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
     <div className="min-h-screen bg-gradient-to-bl from-slate-400 to-cyan-800">
       <header className="bg-transparent text-white top-0 z-50 p-6">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-4xl font-bold">Bienvenido, {user.user.name}</h1>
+          <h1 className="text-4xl font-bold">Bienvenido</h1>
           <nav>
             <ul className="flex space-x-4">
               <li>{rol === "checkinero" && <LogOutBtn text={texto} />}</li>
@@ -483,7 +455,7 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
                     {rol === "checkinero" && (
                       <Button
                         onClick={() => handleEdit(check)}
-                        className="bg-cyan-700 hover:bg-900"
+                        className="bg-cyan-700 hover:bg-cyan-900"
                       >
                         Editar
                       </Button>
