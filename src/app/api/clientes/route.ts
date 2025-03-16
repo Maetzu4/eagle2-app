@@ -18,7 +18,10 @@ export async function GET() {
   } catch (error) {
     console.error("Error al obtener clientes:", error);
     return NextResponse.json(
-      { error: "Error al obtener los clientes" },
+      {
+        error: "Error al obtener los clientes",
+        message: error instanceof Error ? error.message : "Error desconocido",
+      },
       { status: 500 }
     );
   }

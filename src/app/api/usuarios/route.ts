@@ -12,8 +12,8 @@ export async function GET() {
         lastname: true,
         email: true,
         status: true,
-        role: true, // Usa el campo `role` en lugar de `checkinero`, `operario`, `digitador`
-        Sede: true,
+        role: true,
+        sede: true, // Cambiado de `Sede` a `sede`
       },
     });
 
