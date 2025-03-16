@@ -38,14 +38,16 @@ export default function Login() {
     setError(null);
     startTransition(async () => {
       const response = await LoginAction(data);
-  
+
       if (response.error) {
         setError(response.error);
       } else {
         // Obtener el token del usuario para verificar su rol
-        const session = await fetch("/api/auth/session").then((res) => res.json());
+        const session = await fetch("/api/auth/session").then((res) =>
+          res.json()
+        );
         const role = session?.user?.role;
-  
+
         if (role === "digitador") {
           router.push("/digitador");
         } else if (role === "checkinero") {
@@ -58,7 +60,6 @@ export default function Login() {
       }
     });
   };
-  
 
   return (
     <div className="flex items-center justify-center h-screen bg-gradient-to-bl from-slate-400 to-cyan-800 gap-60">
@@ -69,10 +70,15 @@ export default function Login() {
           Iniciar Sesión
         </h2>
         {error && (
-          <p className="mt-4 text-sm text-red-500 text-center font-semibold">{error}</p>
+          <p className="mt-4 text-sm text-red-500 text-center font-semibold">
+            {error}
+          </p>
         )}
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-6">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-6 mt-6"
+          >
             <FormField
               control={form.control}
               name="email"
@@ -80,7 +86,11 @@ export default function Login() {
                 <FormItem>
                   <FormLabel className="text-gray-700">Usuario:</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="Ingresa tu usuario" {...field} />
+                    <Input
+                      type="email"
+                      placeholder="Ingresa tu usuario"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -103,7 +113,11 @@ export default function Login() {
                 </FormItem>
               )}
             />
-            <Button disabled={isPending} type="submit" className="w-full px-4 py-2 font-bold bg-cyan-700 hover:bg-cyan-900">
+            <Button
+              disabled={isPending}
+              type="submit"
+              className="w-full px-4 py-2 font-bold bg-cyan-700 hover:bg-cyan-900"
+            >
               Entrar
             </Button>
           </form>

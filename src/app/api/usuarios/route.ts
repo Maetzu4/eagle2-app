@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma"; // Asegúrate de tener prisma en la carpeta lib
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 export async function GET() {
   try {
@@ -10,21 +12,16 @@ export async function GET() {
         lastname: true,
         email: true,
         status: true,
-        //roles
-        role: true,
-        checkinero: true,
-        operario: true,
-        digitador: true,
-
+        role: true, // Usa el campo `role` en lugar de `checkinero`, `operario`, `digitador`
         Sede: true,
       },
     });
 
     return NextResponse.json(usuarios);
   } catch (error) {
-    console.error("Error al obtener clientes:", error);
+    console.error("Error al obtener usuarios:", error);
     return NextResponse.json(
-      { error: "Error al obtener los clientes" },
+      { error: "Error al obtener usuarios" },
       { status: 500 }
     );
   }
