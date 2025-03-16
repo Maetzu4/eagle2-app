@@ -14,89 +14,89 @@ import {
 import LogOutBtn from "@/components/logOutBtn";
 
 interface Checkin {
-  idCheckin?: number,
-  planilla: number,
-  sello: number,
-  clienteID: number,
+  idCheckin?: number;
+  planilla: number;
+  sello: number;
+  clienteID: number;
   clientes: {
-    idCliente: number,
-    name: string,
-    sede: string,
-    fondoId: number,
-    checkin_id: number
-  },
-  declarado: number,
-  ruta_llegada: number,
-  fechaRegistro: Date,
-  checkineroId: number,
+    idCliente: number;
+    name: string;
+    sede: string;
+    fondoId: number;
+    checkin_id: number;
+  };
+  declarado: number;
+  ruta_llegada: number;
+  fechaRegistro: Date;
+  checkineroId: number;
   checkinero: {
-    idCheckinero: number,
-    usuario_id: number
-  },
-  fondoId: number,
+    idCheckinero: number;
+    usuario_id: number;
+  };
+  fondoId: number;
   fondo: {
-    idFondo: number,
-    nombre: string,
-    tipo: string
-  },
+    idFondo: number;
+    nombre: string;
+    tipo: string;
+  };
   servicio: {
-    idServicio: number,
-    planilla: number,
-    sello: number,
-    fecharegistro: Date,
-    B_100000: number,
-    B_50000: number,
-    B_20000: number,
-    B_10000: number,
-    B_5000: number,
-    B_2000: number,
-    Sum_B: number,
-    checkin_id: number,
-    checkineroId: number,
-    fondoId: number,
-    operarioId: number
-  }
+    idServicio: number;
+    planilla: number;
+    sello: number;
+    fecharegistro: Date;
+    B_100000: number;
+    B_50000: number;
+    B_20000: number;
+    B_10000: number;
+    B_5000: number;
+    B_2000: number;
+    Sum_B: number;
+    checkin_id: number;
+    checkineroId: number;
+    fondoId: number;
+    operarioId: number;
+  };
 }
 
 interface Clientes {
-  idCliente: number,
-  name: string,
-  sede: string,
-  fondoId: number,
+  idCliente: number;
+  name: string;
+  sede: string;
+  fondoId: number;
   fondo: {
-    idFondo: number,
-    nombre: string,
-    tipo: string
-  },
-  checkin_id: number
+    idFondo: number;
+    nombre: string;
+    tipo: string;
+  };
+  checkin_id: number;
 }
 
 interface usuarios {
-  idUsuario: number,
-  name: string,
-  lastname: string,
-  email: string,
-  status: string,
-  role: string,
+  idUsuario: number;
+  name: string;
+  lastname: string;
+  email: string;
+  status: string;
+  role: string;
   checkinero: {
-    idCheckinero: number,
-    usuario_id: number
-  },
+    idCheckinero: number;
+    usuario_id: number;
+  };
   operario: {
-    idOperario: number,
-    usuario_id: number
-  },
+    idOperario: number;
+    usuario_id: number;
+  };
   digitador: {
-    idDigitador: number,
-    usuario_id: number
-  },
-  Sede: string
+    idDigitador: number;
+    usuario_id: number;
+  };
+  Sede: string;
 }
 
 interface Fondo {
-  idFondo: number,
-  nombre: string,
-  tipo: string
+  idFondo: number;
+  nombre: string;
+  tipo: string;
 }
 
 interface Session {
@@ -128,7 +128,7 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
       name: "",
       sede: "",
       fondoId: 0,
-      checkin_id: 0
+      checkin_id: 0,
     },
     declarado: 0,
     ruta_llegada: 0,
@@ -136,13 +136,13 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
     checkineroId: 0,
     checkinero: {
       idCheckinero: 0,
-      usuario_id: 0
+      usuario_id: 0,
     },
     fondoId: 0,
     fondo: {
       idFondo: 0,
       nombre: "",
-      tipo: ""
+      tipo: "",
     },
     servicio: {
       idServicio: 0,
@@ -159,8 +159,8 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
       checkin_id: 0,
       checkineroId: 0,
       fondoId: 0,
-      operarioId: 0
-    }
+      operarioId: 0,
+    },
   });
 
   useEffect(() => {
@@ -178,7 +178,7 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
         const fondosData = await fondosRes.json();
         setFondos(fondosData);
 
-        console.log(fondos)
+        console.log(fondos);
 
         // Fetch check-ins
         const checkinsRes = await fetch("/api/checkins");
@@ -186,12 +186,11 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
         const checkinsData = await checkinsRes.json();
         setCheckin(checkinsData);
 
-        //Fetch usuarios
+        // Fetch usuarios
         const usuariosRes = await fetch("/api/usuarios");
         if (!usuariosRes.ok) throw new Error("Error al cargar usuarios");
         const usuariosData = await usuariosRes.json();
         setUsuarios(usuariosData);
-
       } catch (err) {
         console.error("Error al cargar los datos:", err);
       }
@@ -203,13 +202,17 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
   useEffect(() => {
     // Este efecto se ejecutará cuando los usuarios se hayan cargado
     if (usuarios.length > 0) {
-      const role = usuarios.find((checkinero) => checkinero.email === user.user.email)?.role;
+      const role =
+        usuarios.find((checkinero) => checkinero.email === user.user.email)
+          ?.role ?? "";
       setRol(role); // Establecer el rol
       console.log(role);
     }
-  }, [usuarios, user.user.email]); 
+  }, [usuarios, user.user.email]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     let parsedValue = 0;
 
@@ -225,7 +228,9 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
 
     // Lógica para actualizar el cliente y fondo basado en la selección del cliente
     if (name === "clientes") {
-      const selectedCliente = clientes.find(cliente => cliente.idCliente === Number(value));
+      const selectedCliente = clientes.find(
+        (cliente) => cliente.idCliente === Number(value)
+      );
       setFormData((prev) => ({
         ...prev,
         clienteID: selectedCliente ? selectedCliente.idCliente : 0,
@@ -241,14 +246,15 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
     }
 
     setFormData((prev) => {
-      const chekineroEnLinea = usuarios.find((checkinero) => checkinero.email === user.user.email)?.checkinero;
+      const chekineroEnLinea = usuarios.find(
+        (checkinero) => checkinero.email === user.user.email
+      )?.checkinero;
       return {
         ...prev,
-        checkineroId: chekineroEnLinea?.idCheckinero,
+        checkineroId: chekineroEnLinea?.idCheckinero || 0,
         checkinero: chekineroEnLinea || prev.checkinero, // Si no se encuentra, mantiene el anterior
       };
     });
-
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -257,7 +263,6 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
       const checkinData = {
         ...formData,
         fechaRegistro: formData.fechaRegistro.toISOString(),
-        
       };
 
       const method = formData.idCheckin ? "PUT" : "POST"; // Usar PUT si hay un ID
@@ -272,7 +277,6 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
       if (!res.ok) {
         throw new Error("Error en la solicitud");
       }
-
     } catch (error) {
       console.error("Error al enviar el formulario:", error);
     }
@@ -291,7 +295,7 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
       clienteID: checkin.clienteID,
       clientes: checkin.clientes,
       fechaRegistro: new Date(),
-      checkinero: checkin.checkinero
+      checkinero: checkin.checkinero,
     });
   };
 
@@ -325,108 +329,115 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
     <div className="min-h-screen bg-gradient-to-bl from-slate-400 to-cyan-800">
       <header className="bg-transparent text-white top-0 z-50 p-6">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-4xl font-bold">
-            Bienvenido, {user.user.name}
-          </h1>
+          <h1 className="text-4xl font-bold">Bienvenido, {user.user.name}</h1>
           <nav>
             <ul className="flex space-x-4">
-              <li>
-                {rol === "checkinero" && (
-                  <LogOutBtn text={texto} />
-                )}
-              </li>
+              <li>{rol === "checkinero" && <LogOutBtn text={texto} />}</li>
             </ul>
           </nav>
         </div>
       </header>
 
       <main className="container mx-auto p-6">
-
         {/* Formulario */}
         {rol === "checkinero" && (
           <Card className="bg-white p-6 rounded-lg shadow">
-          <form onSubmit={handleSubmit}>
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">
-              Check-in
-            </h2>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Número de Factura</label>
-                <input
-                  type="number"
-                  name="planilla"
-                  value={formData.planilla}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 mt-1 border rounded"
-                  required
-                />
+            <form onSubmit={handleSubmit}>
+              <h2 className="text-2xl font-bold mb-6 text-gray-800">
+                Check-in
+              </h2>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">
+                    Número de Factura
+                  </label>
+                  <input
+                    type="number"
+                    name="planilla"
+                    value={formData.planilla}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 mt-1 border rounded"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">
+                    Cliente
+                  </label>
+                  <select
+                    name="clientes"
+                    value={formData.clientes?.idCliente || "0"}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 mt-1 border rounded"
+                    required
+                  >
+                    <option value="0">Seleccione un cliente</option>
+                    {clientes.map((cliente) => (
+                      <option key={cliente.idCliente} value={cliente.idCliente}>
+                        {cliente.name.replace("_", " ")}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">
+                    Sello
+                  </label>
+                  <input
+                    type="number"
+                    name="sello"
+                    value={formData.sello}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 mt-1 border rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">
+                    Valor Declarado
+                  </label>
+                  <input
+                    type="number"
+                    name="declarado"
+                    value={formData.declarado}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 mt-1 border rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">
+                    Ruta
+                  </label>
+                  <input
+                    type="number"
+                    name="ruta_llegada"
+                    value={formData.ruta_llegada}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 mt-1 border rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">
+                    Fondo
+                  </label>
+                  <input
+                    disabled
+                    type="text"
+                    name="tipo"
+                    value={formData.fondo.nombre.replace("_", " ")}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 mt-1 border rounded"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Cliente</label>
-                <select
-                  name="clientes" // El nombre debe coincidir para ser manejado por handleInputChange
-                  value={formData.clientes?.idCliente || '0'} // Sincronizado con el idCliente actual
-                  onChange={handleInputChange} // Actualiza el estado al cambiar
-                  className="w-full px-3 py-2 mt-1 border rounded"
-                  required>
-                  <option value="0">Seleccione un cliente</option>
-                  {clientes.map((cliente) => (
-                    <option key={cliente.idCliente} value={cliente.idCliente}>
-                      {cliente.name.replace("_", " ")}
-                    </option>
-                  ))}
-                </select>
+              <div className="flex space-x-4 mt-6">
+                <Button type="submit" className="bg-cyan-700 hover:bg-cyan-900">
+                  {formData.idCheckin
+                    ? "Actualizar Check-in"
+                    : "Agregar Check-in"}
+                </Button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Sello</label>
-                <input
-                  type="number"
-                  name="sello"
-                  value={formData.sello}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 mt-1 border rounded"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Valor Declarado</label>
-                <input
-                  type="number"
-                  name="declarado"
-                  value={formData.declarado}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 mt-1 border rounded"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Ruta</label>
-                <input
-                  type="number"
-                  name="ruta_llegada"
-                  value={formData.ruta_llegada}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 mt-1 border rounded"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Fondo</label>
-                <input
-                  disabled
-                  type="text"
-                  name="tipo"
-                  value={formData.fondo.nombre.replace("_", " ")}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 mt-1 border rounded"
-                />
-              </div>
-            </div>
-            <div className="flex space-x-4 mt-6">
-              <Button type="submit" className="bg-cyan-700 hover:bg-cyan-900">
-                {formData.idCheckin ? "Actualizar Check-in" : "Agregar Check-in"}
-              </Button>
-
-            </div>
-          </form>
-        </Card>
+            </form>
+          </Card>
         )}
 
         {/* Tabla de registros */}
@@ -454,25 +465,28 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
                   <TableCell>{check.sello}</TableCell>
                   <TableCell>{check.declarado}</TableCell>
                   <TableCell>{check.ruta_llegada}</TableCell>
-                  <TableCell>
-                    {check.clientes.name.replace("_", " ")}
-                  </TableCell>
+                  <TableCell>{check.clientes.name.replace("_", " ")}</TableCell>
                   <TableCell>
                     {check.fechaRegistro
                       ? new Date(check.fechaRegistro).toLocaleDateString()
                       : ""}
                   </TableCell>
                   <TableCell>
-                    {usuarios.find((checkinero) => check.checkinero.usuario_id === checkinero.idUsuario)?.name}
+                    {
+                      usuarios.find(
+                        (checkinero) =>
+                          check.checkinero.usuario_id === checkinero.idUsuario
+                      )?.name
+                    }
                   </TableCell>
                   <TableCell>
                     {rol === "checkinero" && (
                       <Button
-                      onClick={() => handleEdit(check)}
-                      className="bg-cyan-700 hover:bg-cyan-900"
-                    >
-                      Editar
-                    </Button>
+                        onClick={() => handleEdit(check)}
+                        className="bg-cyan-700 hover:bg-900"
+                      >
+                        Editar
+                      </Button>
                     )}
                     <Button
                       onClick={() => handleDelete(check.idCheckin!)}
