@@ -1,65 +1,12 @@
+// app/page.tsx
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { loginSchema } from "@/lib/loginShema";
-import { LoginAction } from "@/actions/auth-action";
-
-type LoginFormValues = z.infer<typeof loginSchema>;
+import { LoginForm } from "@/components/Auth/loginForm";
+import { useAuth } from "@/components/Auth/hooks/useAuth";
 
 export default function Login() {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  const onSubmit = async (data: LoginFormValues) => {
-    setError(null);
-    startTransition(async () => {
-      const response = await LoginAction(data);
-
-      if (response.error) {
-        setError(response.error);
-      } else {
-        // Obtener el token del usuario para verificar su rol
-        const session = await fetch("/api/auth/session").then((res) =>
-          res.json()
-        );
-        const role = session?.user?.role;
-
-        if (role === "digitador") {
-          router.push("/digitador");
-        } else if (role === "checkinero") {
-          router.push("/checkin");
-        } else if (role === "operario") {
-          router.push("/operario");
-        } else {
-          setError("No tiene un rol válido asignado.");
-        }
-      }
-    });
-  };
+  const { handleLoginSuccess, error, setError } = useAuth();
 
   return (
     <div className="flex items-center justify-center h-screen bg-gradient-to-bl from-slate-400 to-cyan-800 gap-60">
@@ -74,54 +21,7 @@ export default function Login() {
             {error}
           </p>
         )}
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-6 mt-6"
-          >
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700">Usuario:</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="Ingresa tu usuario"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700">Contraseña:</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="Ingresa tu contraseña"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button
-              disabled={isPending}
-              type="submit"
-              className="w-full px-4 py-2 font-bold bg-cyan-700 hover:bg-cyan-900"
-            >
-              Entrar
-            </Button>
-          </form>
-        </Form>
+        <LoginForm onSuccess={handleLoginSuccess} onError={setError} />
       </Card>
     </div>
   );

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+// app/api/(checkinero)/checkin/route.ts
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
@@ -41,8 +42,6 @@ export async function GET(req: Request) {
   }
 }
 
-
-
 export async function POST(req: Request) {
   try {
     const { planilla } = await req.json();
@@ -52,7 +51,6 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(checkin, { status: 200 });
-  
   } catch (error) {
     return NextResponse.json(
       { error: "Error al obtener los check-ins" },

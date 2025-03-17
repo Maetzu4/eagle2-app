@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import DigitadorOpciones from "./page.client";
-import LogOutBtn from "@/components/logOutBtn";
+import LogOutBtn from "@/components/Auth/logOutBtn";
 
 async function DigitadorOpcionesContainer() {
   const session = await auth();

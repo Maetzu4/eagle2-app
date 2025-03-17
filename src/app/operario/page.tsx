@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import IngresoFactura from "./page.cliente";
-import LogOutBtn from "@/components/logOutBtn";
+import LogOutBtn from "@/components/Auth/logOutBtn";
 import { prisma } from "@/lib/prisma"; // Importa prisma para obtener datos adicionales
 
 async function IngresoFacturaContainer() {

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+// app/api/(checkinero)/checkins/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 

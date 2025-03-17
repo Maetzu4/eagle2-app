@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import LogOutBtn from "@/components/logOutBtn";
+import LogOutBtn from "@/components/Auth/logOutBtn";
 import { Card } from "@/components/ui/card";
 import {
   Table,

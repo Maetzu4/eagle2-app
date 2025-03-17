@@ -1,6 +1,6 @@
 "use client";
 
-import LogOutBtn from "@/components/logOutBtn";
+import LogOutBtn from "@/components/Auth/logOutBtn";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
