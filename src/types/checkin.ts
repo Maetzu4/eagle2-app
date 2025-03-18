@@ -10,11 +10,27 @@ export interface Cliente {
   checkin_id: number;
 }
 
-// Interfaz para el fondo
+// Interfaz Fondo
 export interface Fondo {
   idFondo: number;
   nombre: string;
-  tipo: string;
+  tipo: "Publico" | "Privado";
+  clientes: Cliente[];
+  checkins: Checkin[];
+  servicios: Servicio[];
+  fecha_de_cierre: FechaCierre[];
+}
+
+//interface fechacierre
+export interface FechaCierre {
+  idFechaCierre: number; // @id @default(autoincrement())
+  fecha_a_cerrar: Date; // DateTime
+  digitadorId: number; // Int
+  digitador: Usuario; // Relación con Usuario
+  fondoId: number; // Int
+  fondo: Fondo; // Relación con Fondo
+  servicioId: number; // Int @unique
+  servicio: Servicio; // Relación con Servicio
 }
 
 // Interfaz para el checkinero
@@ -28,14 +44,15 @@ export interface Servicio {
   idServicio: number;
   planilla: number;
   sello: number;
+  estado: "Activo" | "Inactivo"; // Añade esta propiedad
   fecharegistro: Date;
+  Sum_B: number;
   B_100000: number;
   B_50000: number;
   B_20000: number;
   B_10000: number;
   B_5000: number;
   B_2000: number;
-  Sum_B: number;
   checkin_id: number;
   checkineroId: number;
   fondoId: number;
@@ -77,4 +94,19 @@ export interface Usuario {
     usuario_id: number;
   };
   Sede: string;
+}
+
+//esto es para las sessiones
+export interface user {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+}
+
+//interface de rutas de llegada
+export interface RutaLlegada {
+  idRutaLlegada: number;
+  nombre: string;
+  descripcion?: string;
 }

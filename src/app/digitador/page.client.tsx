@@ -1,58 +1,18 @@
+// app/digitador/page.client.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import LogOutBtn from "@/components/Auth/logOutBtn";
 import { Card } from "@/components/ui/card";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table";
+import { FondosTable } from "@/components/Digitador/fondosTable";
+import { ProcesoForm } from "@/components/Digitador/procesoForm";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-
-interface Cliente {
-  idCliente: number;
-  name: string;
-  sede: string;
-}
-
-interface Checkin {
-  planilla: number;
-  sello: number;
-  declarado: number;
-  fechaRegistro: string;
-}
-
-interface Servicio {
-  planilla: number;
-  sello: number;
-  estado: "Activo" | "Inactivo";
-  fecharegistro: Date;
-  Sum_B: number;
-  B_100000: number;
-  B_50000: number;
-  B_20000: number;
-  B_10000: number;
-  B_5000: number;
-  B_2000: number;
-}
-
-interface Fondo {
-  idFondo: number;
-  nombre: string;
-  tipo: "Publico" | "Privado";
-  clientes: Cliente[];
-  checkins: Checkin[];
-  servicios: Servicio[];
-}
+import { Fondo } from "@/types/checkin";
 
 interface DigitadorOpcionesProps {
-  rol: string; // Solo necesitamos el rol
+  rol: string;
 }
 
 const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ rol }) => {
@@ -72,30 +32,12 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ rol }) => {
     );
     if (selectedFondo) {
       const suma = selectedFondo.servicios
-        .filter((servicio) => servicio.estado === "Inactivo")
+        .filter((servicio) => servicio.estado === "Inactivo") // Aquí se usa `estado`
         .reduce((acc, servicio) => acc + servicio.Sum_B, 0);
       setSumResult(suma);
     }
 
     setCalculo((prevState) => !prevState);
-  };
-
-  const showProceso = () => {
-    if (isFondo) setIsFondo(false);
-    setIsProceso((prevState) => !prevState);
-  };
-
-  const showFondo = () => {
-    if (isProceso) setIsProceso(false);
-    setIsFondo((prevState) => !prevState);
-  };
-
-  const abrirRuta = () => {
-    window.open("/checkin", "_blank");
-  };
-
-  const onlyUnique = (value: string, index: number, self: string[]) => {
-    return self.indexOf(value) === index;
   };
 
   const handlePDF = () => {
@@ -170,7 +112,9 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ rol }) => {
           new Date(servicio.fecharegistro).toLocaleDateString()
         );
 
-      const fechasC = fechas.filter(onlyUnique);
+      const fechasC = fechas.filter(
+        (value, index, self) => self.indexOf(value) === index
+      );
       setInactiveDates(fechasC);
     } else {
       setInactiveDates([]);
@@ -181,9 +125,18 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ rol }) => {
     console.log("Fecha seleccionada:", e.target.value);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Lógica para manejar el envío del formulario
+  const showProceso = () => {
+    if (isFondo) setIsFondo(false);
+    setIsProceso((prevState) => !prevState);
+  };
+
+  const showFondo = () => {
+    if (isProceso) setIsProceso(false);
+    setIsFondo((prevState) => !prevState);
+  };
+
+  const abrirRuta = () => {
+    window.open("/checkin", "_blank");
   };
 
   useEffect(() => {
@@ -218,7 +171,7 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ rol }) => {
       <main className="container mx-auto p-6">
         <Card className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-2xl font-bold mb-6 text-gray-800">
-            Gestion de procesos
+            Gestión de procesos
           </h2>
           <div className="flex justify-between">
             <div className="items-center gap-4">
@@ -253,95 +206,20 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ rol }) => {
             <h2 className="text-xl font-bold mb-4 text-gray-800">
               Listado de Fondos
             </h2>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Codigo</TableHead>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Clientes</TableHead>
-                  <TableHead>Fechas de cierre</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {fondos.map((fond) => (
-                  <TableRow key={fond.idFondo}>
-                    <TableCell>{fond.idFondo}</TableCell>
-                    <TableCell>{fond.nombre}</TableCell>
-                    <TableCell>{fond.tipo}</TableCell>
-                    <TableCell>
-                      {fond.clientes.map((client, index) => (
-                        <span key={index}>
-                          - {client.name.replace("_", " ")}
-                          <br />
-                        </span>
-                      ))}
-                    </TableCell>
-                    <TableCell>fechas</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <FondosTable fondos={fondos} />
           </Card>
         )}
 
         {isProceso && (
           <Card className="bg-white p-6 rounded-lg shadow mt-6">
-            <form onSubmit={handleSubmit}>
-              <h2 className="text-2xl font-bold mb-6 text-gray-800">
-                Proceso de Fechas de cierre
-              </h2>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600">
-                    Fondo
-                  </label>
-                  <select
-                    name="fondos"
-                    value={selectedFondoId || ""}
-                    onChange={handleFondoChange}
-                    className="w-full px-3 py-2 mt-1 border rounded"
-                    required
-                  >
-                    <option value="">Seleccione un fondo</option>
-                    {fondos.map((fond) => (
-                      <option key={fond.idFondo} value={fond.idFondo}>
-                        {fond.idFondo + " " + fond.nombre.replace("_", " ")}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-600">
-                    Fechas a cerrar
-                  </label>
-                  <select
-                    name="fecha"
-                    disabled={!selectedFondoId}
-                    onChange={handleDateChange}
-                    className="w-full px-3 py-2 mt-1 border rounded"
-                    required
-                  >
-                    <option value="">Seleccione una fecha</option>
-                    {inactiveDates.map((fecha, index) => (
-                      <option key={index} value={fecha}>
-                        {fecha}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <Button
-                    type="button"
-                    onClick={handleCalcular}
-                    className="bg-cyan-700 hover:bg-cyan-900"
-                  >
-                    Calcular
-                  </Button>
-                </div>
-              </div>
-            </form>
+            <ProcesoForm
+              fondos={fondos}
+              selectedFondoId={selectedFondoId}
+              inactiveDates={inactiveDates}
+              onFondoChange={handleFondoChange}
+              onDateChange={handleDateChange}
+              onCalcular={handleCalcular}
+            />
           </Card>
         )}
 

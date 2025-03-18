@@ -1,6 +1,8 @@
+// app/api/servicio/route.ts
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+// Crear un nuevo servicio
 export async function POST(req: Request) {
   try {
     // Parseamos el cuerpo de la solicitud
@@ -54,8 +56,6 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log(data);
-
     // Crear el registro en la base de datos
     const servicio = await prisma.servicio.create({
       data: {
@@ -94,59 +94,113 @@ export async function POST(req: Request) {
   }
 }
 
-// Actualizar un registro
+// Obtener todos los servicios
+export async function GET() {
+  try {
+    const servicios = await prisma.servicio.findMany({
+      select: {
+        idServicio: true,
+        planilla: true,
+        sello: true,
+        estado: true, // Asegúrate de incluir esta propiedad
+        fecharegistro: true,
+        Sum_B: true,
+        B_100000: true,
+        B_50000: true,
+        B_20000: true,
+        B_10000: true,
+        B_5000: true,
+        B_2000: true,
+        fondoId: true,
+        fondo: true, // Si necesitas la relación con Fondo
+      },
+    });
+    return NextResponse.json(servicios);
+  } catch (error) {
+    console.error("Error al obtener los servicios:", error);
+    return NextResponse.json(
+      { error: "Error al obtener los servicios" },
+      { status: 500 }
+    );
+  }
+}
+
+// Actualizar un servicio
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
     const {
-      idCheckin,
+      idServicio,
       planilla,
       sello,
-      declarado,
-      ruta_llegada,
-      clienteID,
+      estado,
+      fecharegistro,
+      observacion,
+      B_100000,
+      B_50000,
+      B_20000,
+      B_10000,
+      B_5000,
+      B_2000,
+      Sum_B,
+      diferencia,
+      checkin_id,
+      checkineroId,
       fondoId,
+      operarioId,
+      clienteId,
     } = body;
 
-    // Validar el ID del check-in
-    if (!idCheckin) {
+    // Validar el ID del servicio
+    if (!idServicio) {
       return NextResponse.json(
-        { error: "El ID del check-in es requerido" },
+        { error: "El ID del servicio es requerido" },
         { status: 400 }
       );
     }
 
-    // Verificar si el check-in existe
-    const checkinExists = await prisma.checkin.findUnique({
-      where: { idCheckin },
+    // Verificar si el servicio existe
+    const servicioExists = await prisma.servicio.findUnique({
+      where: { idServicio },
     });
-    if (!checkinExists) {
+    if (!servicioExists) {
       return NextResponse.json(
-        { error: "El check-in no existe" },
+        { error: "El servicio no existe" },
         { status: 404 }
       );
     }
 
-    // Actualizar el check-in
-    const updatedCheckin = await prisma.checkin.update({
-      where: { idCheckin },
+    // Actualizar el servicio
+    const updatedServicio = await prisma.servicio.update({
+      where: { idServicio },
       data: {
         planilla,
         sello,
-        declarado,
-        rutaLlegadaId: ruta_llegada, // Cambiado a rutaLlegadaId
-        clienteId: clienteID,
+        estado,
+        fecharegistro: new Date(fecharegistro),
+        observacion,
+        B_100000,
+        B_50000,
+        B_20000,
+        B_10000,
+        B_5000,
+        B_2000,
+        Sum_B,
+        diferencia,
+        checkin_id,
+        checkineroId,
+        clienteId,
         fondoId,
-        fechaRegistro: new Date(), // Opcional: actualizar la fecha de registro
+        operarioId,
       },
     });
 
-    return NextResponse.json(updatedCheckin, { status: 200 });
+    return NextResponse.json(updatedServicio, { status: 200 });
   } catch (error) {
-    console.error("Error al actualizar el check-in:", error);
+    console.error("Error al actualizar el servicio:", error);
     return NextResponse.json(
       {
-        error: "Error al actualizar el check-in",
+        error: "Error al actualizar el servicio",
         message: error instanceof Error ? error.message : "Error desconocido",
       },
       { status: 500 }

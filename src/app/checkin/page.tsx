@@ -2,11 +2,17 @@
 import { auth } from "@/auth";
 import CheckinLlegadas from "./page.client";
 import LogOutBtn from "@/components/Auth/logOutBtn";
+import { user } from "@/types/checkin";
 
 async function CheckinLlegadasContainer() {
   const session = await auth();
   let texto = "";
-
+  const userr: user = {
+    id: session?.user.id || "",
+    name: session?.user.name || "",
+    role: session?.user.role || "",
+    email: session?.user.email || "",
+  };
   if (!session) {
     texto = "Volver para iniciar sesión";
     return (
@@ -42,7 +48,7 @@ async function CheckinLlegadasContainer() {
   }
 
   // Pasar el rol como una prop a CheckinLlegadas
-  return <CheckinLlegadas rol={rol} />;
+  return <CheckinLlegadas user={userr} />;
 }
 
 export default CheckinLlegadasContainer;

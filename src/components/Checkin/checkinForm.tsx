@@ -1,11 +1,11 @@
-// src/components/checkin/CheckinForm.tsx
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Checkin, Cliente } from "@/types/checkin";
+import { Checkin, Cliente, RutaLlegada } from "@/types/checkin";
 
 interface CheckinFormProps {
   formData: Checkin;
   clientes: Cliente[];
+  rutas: RutaLlegada[];
   onInputChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => void;
@@ -16,6 +16,7 @@ interface CheckinFormProps {
 export function CheckinForm({
   formData,
   clientes,
+  rutas,
   onInputChange,
   onSubmit,
   isEditMode,
@@ -43,8 +44,8 @@ export function CheckinForm({
               Cliente
             </label>
             <select
-              name="clientes"
-              value={formData.clientes?.idCliente || "0"}
+              name="clienteID"
+              value={formData.clienteID || "0"}
               onChange={onInputChange}
               className="w-full px-3 py-2 mt-1 border rounded"
               required
@@ -85,13 +86,20 @@ export function CheckinForm({
             <label className="block text-sm font-medium text-gray-600">
               Ruta
             </label>
-            <input
-              type="number"
+            <select
               name="ruta_llegada"
-              value={formData.ruta_llegada}
+              value={formData.ruta_llegada || ""}
               onChange={onInputChange}
               className="w-full px-3 py-2 mt-1 border rounded"
-            />
+              required
+            >
+              <option value="">Seleccione una ruta</option>
+              {rutas.map((ruta) => (
+                <option key={ruta.idRutaLlegada} value={ruta.idRutaLlegada}>
+                  {ruta.nombre}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-600">
