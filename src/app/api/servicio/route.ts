@@ -61,7 +61,7 @@ export async function POST(req: Request) {
       data: {
         planilla,
         sello,
-        fecharegistro: fechaRegistroValida,
+        //fecharegistro: fechaRegistroValida,
         estado: estado || "Activo", // Default: 'Activo'
         observacion: observacion || "",
         B_100000: B_100000 || 0,
@@ -103,7 +103,7 @@ export async function GET() {
         planilla: true,
         sello: true,
         estado: true, // Asegúrate de incluir esta propiedad
-        fecharegistro: true,
+        //fecharegistro: true,
         Sum_B: true,
         B_100000: true,
         B_50000: true,
@@ -134,7 +134,7 @@ export async function PUT(req: Request) {
       planilla,
       sello,
       estado,
-      fecharegistro,
+      //fecharegistro,
       observacion,
       B_100000,
       B_50000,
@@ -177,7 +177,7 @@ export async function PUT(req: Request) {
         planilla,
         sello,
         estado,
-        fecharegistro: new Date(fecharegistro),
+        //fecharegistro: new Date(fecharegistro),
         observacion,
         B_100000,
         B_50000,

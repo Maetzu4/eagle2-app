@@ -24,7 +24,7 @@ export function FondosTable({ fondos }: FondosTableProps) {
           <TableHead>Nombre</TableHead>
           <TableHead>Tipo</TableHead>
           <TableHead>Clientes</TableHead>
-          <TableHead>Fechas de cierre</TableHead>
+          {/* <TableHead>Fechas de cierre</TableHead> */}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -41,11 +41,11 @@ export function FondosTable({ fondos }: FondosTableProps) {
                 </span>
               ))}
             </TableCell>
-            <TableCell>
+            {/* <TableCell>
               {fond.fecha_de_cierre
                 ? new Date(fond.fecha_de_cierre).toLocaleDateString()
                 : "Sin fecha de cierre"}
-            </TableCell>
+            </TableCell> */}
           </TableRow>
         ))}
       </TableBody>

@@ -2,6 +2,7 @@
 
 // Interfaz para el cliente
 export interface Cliente {
+  sede: Sede;
   idCliente: number;
   name: string;
   sedeId: number; // Relación con Sede
@@ -102,4 +103,14 @@ export interface RutaLlegada {
   nombre: string;
   descripcion?: string;
   checkins: Checkin[];
+}
+
+//interface para sede
+export interface Sede {
+  idSede: number; // Identificador único de la sede
+  nombre: string; // Nombre de la sede
+  direccion: string; // Dirección de la sede
+  telefono?: string; // Teléfono de la sede (opcional)
+  usuarios: Usuario[]; // Lista de usuarios asociados a la sede
+  clientes: Cliente[]; // Lista de clientes asociados a la sede
 }
