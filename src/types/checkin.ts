@@ -4,10 +4,11 @@
 export interface Cliente {
   idCliente: number;
   name: string;
-  sede: string;
-  fondoId: number;
+  sedeId: number; // Relación con Sede
+  fondoId: number; // Relación con Fondo
   fondo: Fondo;
-  checkin_id: number;
+  checkins: Checkin[];
+  servicios: Servicio[];
 }
 
 // Interfaz Fondo
@@ -21,22 +22,16 @@ export interface Fondo {
   fecha_de_cierre: FechaCierre[];
 }
 
-//interface fechacierre
+// Interfaz para la fecha de cierre
 export interface FechaCierre {
-  idFechaCierre: number; // @id @default(autoincrement())
-  fecha_a_cerrar: Date; // DateTime
-  digitadorId: number; // Int
-  digitador: Usuario; // Relación con Usuario
-  fondoId: number; // Int
-  fondo: Fondo; // Relación con Fondo
-  servicioId: number; // Int @unique
-  servicio: Servicio; // Relación con Servicio
-}
-
-// Interfaz para el checkinero
-export interface Checkinero {
-  idCheckinero: number;
-  usuario_id: number;
+  idFechaCierre: number;
+  fecha_a_cerrar: Date;
+  digitadorId: number;
+  digitador: Usuario;
+  fondoId: number;
+  fondo: Fondo;
+  servicioId: number;
+  servicio: Servicio;
 }
 
 // Interfaz para el servicio
@@ -44,7 +39,7 @@ export interface Servicio {
   idServicio: number;
   planilla: number;
   sello: number;
-  estado: "Activo" | "Inactivo"; // Añade esta propiedad
+  estado: "Activo" | "Inactivo";
   fecharegistro: Date;
   Sum_B: number;
   B_100000: number;
@@ -64,16 +59,17 @@ export interface Checkin {
   idCheckin?: number;
   planilla: number;
   sello: number;
-  clienteID: number;
-  clientes: Cliente;
+  clienteId: number; // Relación con Cliente
+  clientes?: Cliente;
   declarado: number;
-  ruta_llegada: number;
+  rutaLlegadaId: number; // Relación con RutaLlegada
+  rutaLlegada?: RutaLlegada;
   fechaRegistro: Date;
-  checkineroId: number;
-  checkinero: Checkinero;
-  fondoId: number;
-  fondo: Fondo;
-  servicio: Servicio;
+  checkineroId: number; // Relación con Usuario
+  checkinero?: Usuario;
+  fondoId: number; // Relación con Fondo
+  fondo?: Fondo;
+  servicio?: Servicio;
 }
 
 // Interfaz para el usuario
@@ -82,31 +78,28 @@ export interface Usuario {
   name: string;
   lastname: string;
   email: string;
-  status: string;
-  role: string;
-  checkinero: Checkinero;
-  operario: {
-    idOperario: number;
-    usuario_id: number;
-  };
-  digitador: {
-    idDigitador: number;
-    usuario_id: number;
-  };
-  Sede: string;
+  status: "Activo" | "Inactivo";
+  role: "checkinero" | "digitador" | "operario" | "administrador";
+  sedeId: number; // Relación con Sede
+  checkins: Checkin[];
+  servicios: Servicio[];
+  fechaCierres: FechaCierre[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-//esto es para las sessiones
+// Interfaz para las sesiones
 export interface user {
-  id: string;
+  id: number;
   name: string;
   role: string;
   email: string;
 }
 
-//interface de rutas de llegada
+// Interfaz para las rutas de llegada
 export interface RutaLlegada {
   idRutaLlegada: number;
   nombre: string;
   descripcion?: string;
+  checkins: Checkin[];
 }

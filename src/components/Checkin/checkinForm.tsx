@@ -44,8 +44,8 @@ export function CheckinForm({
               Cliente
             </label>
             <select
-              name="clienteID"
-              value={formData.clienteID || "0"}
+              name="clienteId"
+              value={formData.clienteId || "0"}
               onChange={onInputChange}
               className="w-full px-3 py-2 mt-1 border rounded"
               required
@@ -87,8 +87,8 @@ export function CheckinForm({
               Ruta
             </label>
             <select
-              name="ruta_llegada"
-              value={formData.ruta_llegada || ""}
+              name="rutaLlegadaId"
+              value={formData.rutaLlegadaId || ""}
               onChange={onInputChange}
               className="w-full px-3 py-2 mt-1 border rounded"
               required
@@ -108,9 +108,8 @@ export function CheckinForm({
             <input
               disabled
               type="text"
-              name="tipo"
-              value={formData.fondo.nombre.replace("_", " ")}
-              onChange={onInputChange}
+              name="fondo"
+              value={formData.fondo?.nombre || ""} // Mostrar el nombre del fondo
               className="w-full px-3 py-2 mt-1 border rounded"
             />
           </div>

@@ -21,6 +21,7 @@ enum Role {
   checkinero
   digitador
   operario
+  administrador
 }
 
 model Usuario {
@@ -32,23 +33,24 @@ model Usuario {
   status       State
   role         Role
   sedeId       Int? // Relación opcional con Sede
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @default(now())
   checkins     Checkin[]     @relation("CheckineroCheckins")
   servicios    Servicio[]    @relation("OperarioServicios")
   atendidos    Servicio[]    @relation("CheckineroServicios")
   fechaCierres FechaCierre[] @relation("DigitadorFechaCierres")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @default(now())
 
   sede Sede? @relation(fields: [sedeId], references: [idSede])
 
   @@index([email])
   @@index([role])
+  @@index([sedeId, role])
 }
 
 model Sede {
   idSede    Int       @id @default(autoincrement())
   nombre    String
-  direccion String?
+  direccion String
   telefono  String?
   usuarios  Usuario[] // Relación inversa con Usuario
   clientes  Cliente[] // Relación inversa con Cliente
@@ -57,21 +59,20 @@ model Sede {
 }
 
 model Checkin {
-  idCheckin     Int       @id @default(autoincrement())
+  idCheckin     Int         @id @default(autoincrement())
   planilla      Int
   sello         Int
   clienteId     Int
-  clientes      Cliente   @relation(fields: [clienteId], references: [idCliente])
+  clientes      Cliente     @relation(fields: [clienteId], references: [idCliente])
   declarado     Int
-  rutaLlegadaId Int? // Relación con la tabla RutaLlegada
+  rutaLlegadaId Int
+  rutaLlegada   RutaLlegada @relation(fields: [rutaLlegadaId], references: [idRutaLlegada])
   fechaRegistro DateTime
   checkineroId  Int
-  checkinero    Usuario   @relation("CheckineroCheckins", fields: [checkineroId], references: [idUsuario])
+  checkinero    Usuario     @relation("CheckineroCheckins", fields: [checkineroId], references: [idUsuario])
   fondoId       Int
-  fondo         Fondo     @relation(fields: [fondoId], references: [idFondo])
+  fondo         Fondo       @relation(fields: [fondoId], references: [idFondo])
   servicio      Servicio?
-
-  rutaLlegada RutaLlegada? @relation(fields: [rutaLlegadaId], references: [idRutaLlegada])
 
   @@index([clienteId])
   @@index([checkineroId])
@@ -83,16 +84,16 @@ model RutaLlegada {
   idRutaLlegada Int       @id @default(autoincrement())
   nombre        String    @unique
   descripcion   String?
-  checkins      Checkin[] // Relación inversa con Checkin
+  checkins      Checkin[]
 
-  @@map("rutas_llegada") // Opcional: para usar un nombre de tabla personalizado en la base de datos
+  @@map("rutas_llegada")
 }
 
 model Servicio {
   idServicio    Int          @id @default(autoincrement())
   planilla      Int
   sello         Int
-  fecharegistro DateTime     @default(now())
+  fechaRegistro DateTime     @default(now())
   estado        State
   observacion   String
   diferencia    Int
@@ -123,14 +124,14 @@ model Servicio {
 }
 
 model FechaCierre {
-  idFechaCierre  Int      @id @default(autoincrement())
+  idFechaCierre  Int       @id @default(autoincrement())
   fecha_a_cerrar DateTime
   digitadorId    Int
-  digitador      Usuario  @relation("DigitadorFechaCierres", fields: [digitadorId], references: [idUsuario])
+  digitador      Usuario   @relation("DigitadorFechaCierres", fields: [digitadorId], references: [idUsuario])
   fondoId        Int
-  fondo          Fondo    @relation(fields: [fondoId], references: [idFondo])
-  servicioId     Int      @unique
-  servicio       Servicio @relation(fields: [servicioId], references: [idServicio])
+  fondo          Fondo     @relation(fields: [fondoId], references: [idFondo])
+  servicioId     Int?      @unique
+  servicio       Servicio? @relation(fields: [servicioId], references: [idServicio])
 
   @@index([servicioId])
   @@index([fondoId])
@@ -138,7 +139,7 @@ model FechaCierre {
 
 model Cliente {
   idCliente Int        @id @default(autoincrement())
-  name      String?
+  name      String
   sedeId    Int? // Relación opcional con Sede
   fondoId   Int
   fondo     Fondo      @relation(fields: [fondoId], references: [idFondo])
@@ -158,4 +159,6 @@ model Fondo {
   checkins        Checkin[]
   servicios       Servicio[]
   fecha_de_cierre FechaCierre[]
+
+  @@index([tipo])
 }

@@ -1,6 +1,5 @@
 // src/components/checkin/CheckinTable.tsx
 "use client";
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -24,6 +23,7 @@ interface CheckinTableProps {
 
 export function CheckinTable({
   checkin,
+  clientes,
   usuarios,
   rol,
   onEdit,
@@ -48,44 +48,68 @@ export function CheckinTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {checkin.map((check) => (
-            <TableRow key={check.idCheckin}>
-              <TableCell>{check.planilla}</TableCell>
-              <TableCell>{check.sello}</TableCell>
-              <TableCell>{check.declarado}</TableCell>
-              <TableCell>{check.ruta_llegada}</TableCell>
-              <TableCell>{check.clientes.name.replace("_", " ")}</TableCell>
-              <TableCell>
-                {check.fechaRegistro
-                  ? new Date(check.fechaRegistro).toLocaleDateString()
-                  : ""}
-              </TableCell>
-              <TableCell>
-                {
-                  usuarios.find(
-                    (checkinero) =>
-                      check.checkinero.usuario_id === checkinero.idUsuario
-                  )?.name
-                }
-              </TableCell>
-              <TableCell>
-                {rol === "checkinero" && (
-                  <Button
-                    onClick={() => onEdit(check)}
-                    className="bg-cyan-700 hover:bg-cyan-900"
-                  >
-                    Editar
-                  </Button>
-                )}
-                <Button
-                  onClick={() => onDelete(check.idCheckin!)}
-                  className="bg-red-600 hover:bg-red-800"
-                >
-                  Eliminar
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
+          {checkin.map((check) => {
+            const cliente = clientes.find(
+              (c) => c.idCliente === check.clienteId
+            );
+            const checkinero = usuarios.find(
+              (u) => u.idUsuario === check.checkineroId
+            );
+
+            return (
+              <TableRow key={check.idCheckin}>
+                <TableCell>{check.planilla}</TableCell>
+                <TableCell>{check.sello}</TableCell>
+                <TableCell>
+                  {new Intl.NumberFormat("es-CO", {
+                    style: "currency",
+                    currency: "COP",
+                  }).format(check.declarado)}
+                </TableCell>
+                <TableCell>{check.rutaLlegadaId}</TableCell>
+                <TableCell>
+                  {cliente ? cliente.name.replace("_", " ") : "N/A"}
+                </TableCell>
+                <TableCell>
+                  {check.fechaRegistro
+                    ? new Date(check.fechaRegistro).toLocaleDateString(
+                        "es-CO",
+                        {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      )
+                    : "N/A"}
+                </TableCell>
+                <TableCell>
+                  {checkinero
+                    ? checkinero.name + " " + checkinero.lastname
+                    : "N/A"}
+                </TableCell>
+                <TableCell>
+                  <div className="flex space-x-2">
+                    {rol === "checkinero" && (
+                      <Button
+                        onClick={() => onEdit(check)}
+                        className="bg-cyan-700 hover:bg-cyan-900"
+                      >
+                        Editar
+                      </Button>
+                    )}
+                    <Button
+                      onClick={() => onDelete(check.idCheckin!)}
+                      className="bg-red-600 hover:bg-red-800"
+                    >
+                      Eliminar
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </Card>

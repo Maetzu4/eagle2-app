@@ -12,68 +12,36 @@ interface CheckinLlegadasProps {
 
 const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
   const texto = "Cerrar sesión";
-  const { usuarios, checkin, loading, error, setCheckin } = useCheckin();
+  const { usuarios, checkin, loading, error, setCheckin } = useCheckin(
+    user.email
+  ); // Pasar el correo del usuario
   const [formData, setFormData] = useState<Checkin>({
     planilla: 0,
     sello: 0,
-    clienteID: 0,
-    clientes: {
-      idCliente: 0,
-      name: "",
-      sede: "",
-      fondoId: 0,
-      fondo: {
-        idFondo: 0,
-        nombre: "",
-        tipo: "Publico",
-        clientes: [],
-        checkins: [],
-        servicios: [],
-        fecha_de_cierre: [],
-      },
-      checkin_id: 0,
-    },
+    clienteId: 0,
     declarado: 0,
-    ruta_llegada: 0,
-    fechaRegistro: new Date(),
-    checkineroId: 0,
-    checkinero: {
-      idCheckinero: 0,
-      usuario_id: 0,
-    },
+    rutaLlegadaId: 0,
+    fechaRegistro: new Date(), // Tipo Date
+    checkineroId: 0, // Inicializar como 0 hasta que obtengamos el ID del usuario
     fondoId: 0,
-    fondo: {
-      idFondo: 0,
-      nombre: "",
-      tipo: "Publico",
-      clientes: [],
-      checkins: [],
-      servicios: [],
-      fecha_de_cierre: [],
-    },
-    servicio: {
-      idServicio: 0,
-      planilla: 0,
-      sello: 0,
-      fecharegistro: new Date(),
-      B_100000: 0,
-      B_50000: 0,
-      B_20000: 0,
-      B_10000: 0,
-      B_5000: 0,
-      B_2000: 0,
-      Sum_B: 0,
-      checkin_id: 0,
-      checkineroId: 0,
-      fondoId: 0,
-      operarioId: 0,
-      estado: "Activo",
-    },
+    fondo: undefined, // Inicializar como undefined
   });
 
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [rutas, setRutas] = useState<RutaLlegada[]>([]);
 
+  // Obtener los datos completos del usuario por correo
+  useEffect(() => {
+    if (usuarios.length > 0) {
+      const usuario = usuarios[0]; // Obtener el primer usuario (debería ser el único)
+      setFormData((prev) => ({
+        ...prev,
+        checkineroId: usuario.idUsuario, // Actualizar checkineroId con el ID del usuario
+      }));
+    }
+  }, [usuarios]);
+
+  // Obtener clientes y rutas
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -106,8 +74,8 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
       "planilla",
       "sello",
       "declarado",
-      "ruta_llegada",
-      "clienteID",
+      "rutaLlegadaId",
+      "clienteId",
     ].includes(name)
       ? parseInt(value, 10)
       : value;
@@ -118,22 +86,17 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
       [name]: parsedValue,
     }));
 
-    // Si se selecciona un cliente, actualizar fondo y clienteID
-    if (name === "clienteID") {
+    // Si se selecciona un cliente, actualizar fondoId y fondo
+    if (name === "clienteId") {
       const selectedCliente = clientes.find(
         (cliente) => cliente.idCliente === parsedValue
       );
       if (selectedCliente) {
         setFormData((prev) => ({
           ...prev,
-          clienteID: selectedCliente.idCliente,
-          fondoId: selectedCliente.fondo.idFondo,
-          fondo: {
-            ...prev.fondo,
-            idFondo: selectedCliente.fondo.idFondo,
-            nombre: selectedCliente.fondo.nombre,
-            tipo: selectedCliente.fondo.tipo,
-          },
+          clienteId: selectedCliente.idCliente, // Actualizar clienteId
+          fondoId: selectedCliente.fondoId, // Actualizar fondoId
+          fondo: selectedCliente.fondo, // Actualizar el objeto fondo
         }));
       }
     }
@@ -141,15 +104,25 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // Validar campos requeridos
+    if (
+      !formData.planilla ||
+      !formData.sello ||
+      !formData.declarado ||
+      !formData.rutaLlegadaId ||
+      !formData.clienteId ||
+      !formData.fondoId
+    ) {
+      alert("Todos los campos son requeridos");
+      return;
+    }
+
     try {
       const checkinData = {
         ...formData,
-        fechaRegistro: formData.fechaRegistro.toISOString(),
-        clienteID: formData.clienteID,
-        ruta_llegada: formData.ruta_llegada,
+        fechaRegistro: new Date(formData.fechaRegistro).toISOString(), // Asegurar formato ISO
       };
-
-      console.log("Datos enviados:", checkinData); // Depuración
 
       const method = formData.idCheckin ? "PUT" : "POST";
       const endpoint = formData.idCheckin
@@ -168,6 +141,24 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
 
       const result = await res.json();
       console.log("Checkin guardado:", result);
+
+      // Limpiar el formulario después de guardar
+      setFormData({
+        planilla: 0,
+        sello: 0,
+        clienteId: 0,
+        declarado: 0,
+        rutaLlegadaId: 0,
+        fechaRegistro: new Date(),
+        checkineroId: formData.checkineroId, // Mantener el checkineroId actual
+        fondoId: 0,
+      });
+
+      // Actualizar la lista de checkins
+      const updatedCheckins = await fetch("/api/checkins").then((res) =>
+        res.json()
+      );
+      setCheckin(updatedCheckins);
     } catch (error) {
       console.error("Error al enviar el formulario:", error);
     }
@@ -180,13 +171,11 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
       planilla: checkin.planilla,
       sello: checkin.sello,
       declarado: checkin.declarado,
-      ruta_llegada: checkin.ruta_llegada,
-      fondo: checkin.fondo,
+      rutaLlegadaId: checkin.rutaLlegadaId,
+      fondoId: checkin.fondoId,
       checkineroId: checkin.checkineroId,
-      clienteID: checkin.clienteID,
-      clientes: checkin.clientes,
+      clienteId: checkin.clienteId,
       fechaRegistro: new Date(checkin.fechaRegistro),
-      checkinero: checkin.checkinero,
     });
   };
 

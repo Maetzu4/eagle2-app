@@ -1,10 +1,9 @@
-// src/components/checkin/hooks/useCheckin.ts
 "use client";
 
 import { useState, useEffect } from "react";
 import { Checkin, Cliente, Usuario } from "@/types/checkin";
 
-export function useCheckin() {
+export function useCheckin(userEmail: string) {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [checkin, setCheckin] = useState<Checkin[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -29,11 +28,11 @@ export function useCheckin() {
         const checkinsData = await checkinsRes.json();
         setCheckin(checkinsData);
 
-        // Fetch usuarios
-        const usuariosRes = await fetch("/api/usuarios");
-        if (!usuariosRes.ok) throw new Error("Error al cargar usuarios");
-        const usuariosData = await usuariosRes.json();
-        setUsuarios(usuariosData);
+        // Fetch usuario actual por correo
+        const usuarioRes = await fetch(`/api/usuarios?email=${userEmail}`);
+        if (!usuarioRes.ok) throw new Error("Error al cargar el usuario");
+        const usuarioData = await usuarioRes.json();
+        setUsuarios([usuarioData]); // Guardar el usuario en un array
       } catch (err) {
         console.error("Error al cargar los datos:", err);
         setError(err instanceof Error ? err.message : "Error desconocido");
@@ -43,7 +42,7 @@ export function useCheckin() {
     };
 
     fetchData();
-  }, []);
+  }, [userEmail]); // Dependencia: userEmail
 
   return { usuarios, checkin, clientes, loading, error, setCheckin };
 }
