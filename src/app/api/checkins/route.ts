@@ -1,10 +1,38 @@
+// app/api/checkins/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Checkin } from "@/types/checkin";
 
-// Obtener todos los check-ins
-export async function GET() {
+// Obtener todos los check-ins o buscar por planilla
+export async function GET(req: Request) {
   try {
+    const url = new URL(req.url);
+    const planilla = url.searchParams.get("planilla");
+
+    if (planilla) {
+      // Buscar check-in por planilla
+      const checkin = await prisma.checkin.findFirst({
+        where: { planilla: parseInt(planilla, 10) },
+        include: {
+          clientes: true,
+          fondo: true,
+          checkinero: true,
+          rutaLlegada: true,
+          servicio: true,
+        },
+      });
+
+      if (!checkin) {
+        return NextResponse.json(
+          { error: "Checkin no encontrado" },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json(checkin, { status: 200 });
+    }
+
+    // Obtener todos los check-ins
     const checkins = await prisma.checkin.findMany({
       include: {
         clientes: true,
@@ -14,10 +42,12 @@ export async function GET() {
         servicio: true,
       },
     });
+
     return NextResponse.json(checkins, { status: 200 });
   } catch (error) {
+    console.error("Error al obtener los check-ins:", error);
     return NextResponse.json(
-      { error: "Error al obtener los check-ins" + error },
+      { error: "Error al obtener los check-ins" },
       { status: 500 }
     );
   }
