@@ -4,7 +4,7 @@ import { CheckinForm } from "@/components/Checkin/checkinForm";
 import { CheckinTable } from "@/components/Checkin/checkinTable";
 import LogOutBtn from "@/components/Auth/logOutBtn";
 import { useCheckin } from "@/components/Checkin/hooks/useCheckin";
-import { Checkin, user, RutaLlegada, Cliente } from "@/types/checkin";
+import { Checkin, user, Cliente } from "@/types/checkin";
 
 interface CheckinLlegadasProps {
   user: user;
@@ -12,9 +12,8 @@ interface CheckinLlegadasProps {
 
 const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
   const texto = "Cerrar sesión";
-  const { usuarios, checkin, loading, error, setCheckin } = useCheckin(
-    user.email
-  ); // Pasar el correo del usuario
+  const { usuarios, checkin, loading, error, setCheckin, clientes, rutas } =
+    useCheckin(user.email);
   const [formData, setFormData] = useState<Checkin>({
     planilla: 0,
     sello: 0,
@@ -27,9 +26,6 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
     fondo: undefined, // Inicializar como undefined
   });
 
-  const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [rutas, setRutas] = useState<RutaLlegada[]>([]);
-
   // Obtener los datos completos del usuario por correo
   useEffect(() => {
     if (usuarios.length > 0) {
@@ -40,29 +36,6 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
       }));
     }
   }, [usuarios]);
-
-  // Obtener clientes y rutas
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Obtener clientes
-        const clientesRes = await fetch("/api/clientes");
-        if (!clientesRes.ok) throw new Error("Error al cargar clientes");
-        const clientesData = await clientesRes.json();
-        setClientes(clientesData);
-
-        // Obtener rutas
-        const rutasRes = await fetch("/api/rutas");
-        if (!rutasRes.ok) throw new Error("Error al cargar rutas");
-        const rutasData = await rutasRes.json();
-        setRutas(rutasData);
-      } catch (err) {
-        console.error("Error al cargar los datos:", err);
-      }
-    };
-
-    fetchData();
-  }, []);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -89,7 +62,7 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
     // Si se selecciona un cliente, actualizar fondoId y fondo
     if (name === "clienteId") {
       const selectedCliente = clientes.find(
-        (cliente) => cliente.idCliente === parsedValue
+        (cliente: Cliente) => cliente.idCliente === parsedValue
       );
       if (selectedCliente) {
         setFormData((prev) => ({
@@ -121,12 +94,11 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
     try {
       const checkinData = {
         ...formData,
-        fechaRegistro: new Date(formData.fechaRegistro).toISOString(), // Asegurar formato ISO
       };
 
       const method = formData.idCheckin ? "PUT" : "POST";
       const endpoint = formData.idCheckin
-        ? `/api/checkins/${formData.idCheckin}`
+        ? `/api/checkins/${formData.idCheckin}` // Enviar el ID en la URL
         : "/api/checkins";
 
       const res = await fetch(endpoint, {
@@ -166,16 +138,16 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
 
   const handleEdit = (checkin: Checkin) => {
     setFormData({
-      ...checkin,
       idCheckin: checkin.idCheckin,
       planilla: checkin.planilla,
       sello: checkin.sello,
+      clienteId: checkin.clienteId,
       declarado: checkin.declarado,
       rutaLlegadaId: checkin.rutaLlegadaId,
-      fondoId: checkin.fondoId,
-      checkineroId: checkin.checkineroId,
-      clienteId: checkin.clienteId,
       fechaRegistro: new Date(checkin.fechaRegistro),
+      checkineroId: checkin.checkineroId,
+      fondoId: checkin.fondoId,
+      fondo: checkin.fondo,
     });
   };
 
@@ -199,7 +171,9 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
       console.log("Check-in eliminado:", deletedCheckin);
 
       // Actualizar el estado para reflejar los cambios
-      setCheckin((prev) => prev.filter((item) => item.idCheckin !== id));
+      setCheckin((prev: Checkin[]) =>
+        prev.filter((item: Checkin) => item.idCheckin !== id)
+      );
     } catch (error) {
       console.error("Error al eliminar el check-in:", error);
     }

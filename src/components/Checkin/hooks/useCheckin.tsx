@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Checkin, Cliente, Usuario } from "@/types/checkin";
+import { Checkin, Cliente, Usuario, RutaLlegada } from "@/types/checkin";
 
+// Modifica el hook useCheckin para obtener rutas
 export function useCheckin(userEmail: string) {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [checkin, setCheckin] = useState<Checkin[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [rutas, setRutas] = useState<RutaLlegada[]>([]); // Nuevo estado para rutas
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,6 +23,12 @@ export function useCheckin(userEmail: string) {
         if (!clientesRes.ok) throw new Error("Error al cargar clientes");
         const clientesData = await clientesRes.json();
         setClientes(clientesData);
+
+        // Fetch rutas
+        const rutasRes = await fetch("/api/rutas");
+        if (!rutasRes.ok) throw new Error("Error al cargar rutas");
+        const rutasData = await rutasRes.json();
+        setRutas(rutasData);
 
         // Fetch check-ins
         const checkinsRes = await fetch("/api/checkins");
@@ -44,5 +52,5 @@ export function useCheckin(userEmail: string) {
     fetchData();
   }, [userEmail]); // Dependencia: userEmail
 
-  return { usuarios, checkin, clientes, loading, error, setCheckin };
+  return { usuarios, checkin, clientes, rutas, loading, error, setCheckin };
 }
