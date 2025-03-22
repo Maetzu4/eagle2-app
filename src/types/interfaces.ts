@@ -37,7 +37,7 @@ export interface FechaCierre {
 
 // Interfaz para el servicio
 export interface Servicio {
-  idServicio: number;
+  idServicio?: number;
   planilla: number;
   observacion: string;
   sello: number;

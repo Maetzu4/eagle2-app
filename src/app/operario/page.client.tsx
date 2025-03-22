@@ -1,36 +1,51 @@
-//@/app/operario/page.client.tsx
+// @/app/operario/page.client.tsx
 "use client";
+import { useEffect, useState } from "react";
 import LogOutBtn from "@/components/Auth/logOutBtn";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { useFetchData } from "@/hooks/General/useFetchData";
+import { Checkin, Servicio, user } from "@/types/interfaces";
+import { useToast } from "@/hooks/General/use-toast";
+import { Loading } from "@/components/General/loading";
+import { Minus, Plus } from "lucide-react";
 import {
   Table,
-  TableHeader,
-  TableRow,
-  TableHead,
   TableBody,
   TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Minus, Plus } from "lucide-react";
-import React, { useEffect, useState } from "react";
-import { Checkin, Servicio, user, Usuario } from "@/types/interfaces";
+import {
+  AlertDialogHeader,
+  AlertDialogFooter,
+} from "@/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 interface IngresoFacturaProps {
   user: user;
 }
 
 const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
-  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+  const { usuarios, loading, error } = useFetchData(user.email);
   const [checkin, setCheckin] = useState<Checkin>();
   const [isDisabled, setIsDisabled] = useState(false);
   const [isDisabled2, setIsDisabled2] = useState(false);
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [isEditing, setIsEditing] = useState(true);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [formData, setFormData] = useState<Servicio>({
-    idServicio: 0, // Valor inicial para idServicio
-    planilla: 0, // Valor inicial para planilla
-    sello: 0, // Valor inicial para sello
-    Sum_B: 0,
+    planilla: 0,
+    sello: 0,
     estado: "Activo",
     observacion: "",
     diferencia: 0,
@@ -41,6 +56,7 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
     B_10000: 0,
     B_5000: 0,
     B_2000: 0,
+    Sum_B: 0,
     checkin_id: 0,
     checkineroId: 0,
     fondoId: 0,
@@ -48,7 +64,17 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
   });
 
   useEffect(() => {
-    if (checkin) {
+    if (usuarios.length > 0) {
+      const usuario = usuarios[0];
+      setFormData((prev) => ({
+        ...prev,
+        operarioId: usuario.idUsuario,
+      }));
+    }
+  }, [usuarios, setFormData]);
+
+  useEffect(() => {
+    if (checkin && checkin.declarado) {
       const newSum_B =
         formData.B_100000 * 100000 +
         formData.B_50000 * 50000 +
@@ -75,53 +101,93 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
     checkin,
   ]);
 
-  useEffect(() => {
-    if (checkin?.servicio?.estado === "Inactivo") {
-      setIsDisabled2(true); // Deshabilita los campos si el servicio está inactivo
-    }
-  }, [checkin]);
-
-  const handleTextChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-
-    // Encuentra el operario en línea
-    const operarioEnLinea = usuarios.find(
-      (usuario) => usuario.email === user.email
-    );
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-      operarioId: operarioEnLinea?.idUsuario || prev.operarioId, // Usa idUsuario en lugar de idOperario
-    }));
+  const resetForm = () => {
+    setFormData({
+      planilla: 0,
+      sello: 0,
+      estado: "Activo",
+      observacion: "",
+      diferencia: 0,
+      fecharegistro: new Date(),
+      B_100000: 0,
+      B_50000: 0,
+      B_20000: 0,
+      B_10000: 0,
+      B_5000: 0,
+      B_2000: 0,
+      Sum_B: 0,
+      checkin_id: 0,
+      checkineroId: 0,
+      fondoId: 0,
+      operarioId: 0,
+    });
+    setIsDisabled(false); // Habilitar el campo de planilla
+    setIsEditing(true); // Cambiar a modo "edición"
+    setCheckin(undefined); // Limpiar el checkin
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
+  const consultar = async () => {
+    try {
+      // Realizar la consulta al servidor
+      const response = await fetch(
+        `/api/checkins?planilla=${formData.planilla}`
+      );
+      if (!response.ok) {
+        throw new Error("La planilla no existe");
+      }
 
-    const numericValue = parseInt(value, 10);
+      // Obtener los datos del checkin
+      const data = await response.json();
+      setCheckin(data); // Guardar el checkin en el estado
 
-    setFormData((prev) => {
-      const updatedFormData = { ...prev, [name]: numericValue };
+      // Actualizar el formulario con los datos del checkin
+      setFormData((prev) => ({
+        ...prev,
+        planilla: data.planilla, // Asignar el número de planilla
+        sello: data.sello, // Asignar el sello
+        checkin_id: data.idCheckin, // Asignar el ID del checkin
+        checkineroId: data.checkineroId, // Asignar el ID del checkinero
+        fondoId: data.fondoId, // Asignar el ID del fondo
+        clienteId: data.clienteId, // Asignar el ID del cliente
+      }));
 
-      // Calcular Sum_B basado en los valores de los billetes
-      const newSum_B =
-        updatedFormData.B_100000 * 100000 +
-        updatedFormData.B_50000 * 50000 +
-        updatedFormData.B_20000 * 20000 +
-        updatedFormData.B_10000 * 10000 +
-        updatedFormData.B_5000 * 5000 +
-        updatedFormData.B_2000 * 2000;
+      // Si hay un servicio asociado, actualizar el formulario con sus datos
+      if (data.servicio) {
+        setFormData((prev) => ({
+          ...prev,
+          ...data.servicio, // Asignar los datos del servicio
+        }));
+        setIsDisabled2(data.servicio.estado === "Inactivo"); // Deshabilitar si el servicio está inactivo
+      }
 
-      // Calcular diferencia con el valor declarado
-      const diferencia = newSum_B - (checkin?.declarado || 0);
+      // Deshabilitar el campo de planilla después de consultar
+      setIsDisabled(true);
+      setIsEditing(false);
 
-      return { ...updatedFormData, Sum_B: newSum_B, diferencia };
-    });
+      // Depuración
+      console.log("Datos del checkin:", data);
+      console.log("Datos del servicio:", data.servicio);
+      console.log("Formulario actualizado:", {
+        ...formData,
+        planilla: data.planilla,
+        sello: data.sello,
+        checkin_id: data.idCheckin,
+        checkineroId: data.checkineroId,
+        fondoId: data.fondoId,
+        clienteId: data.clienteId,
+      });
+    } catch (error) {
+      // Mostrar mensaje de error
+      toast({
+        description: "" + error,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const habilitarEdicion = () => {
+    setIsDisabled(false);
+    setIsEditing(true);
   };
 
   const handleIncrement = (
@@ -130,24 +196,10 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
       "B_100000" | "B_50000" | "B_20000" | "B_10000" | "B_5000" | "B_2000"
     >
   ) => {
-    setFormData((prev) => {
-      const updatedFormData = {
-        ...prev,
-        [denom]: prev[denom] + 1,
-      };
-
-      const newSum_B =
-        updatedFormData.B_100000 * 100000 +
-        updatedFormData.B_50000 * 50000 +
-        updatedFormData.B_20000 * 20000 +
-        updatedFormData.B_10000 * 10000 +
-        updatedFormData.B_5000 * 5000 +
-        updatedFormData.B_2000 * 2000;
-
-      const diferencia = newSum_B - (checkin?.declarado || 0);
-
-      return { ...updatedFormData, Sum_B: newSum_B, diferencia };
-    });
+    setFormData((prev) => ({
+      ...prev,
+      [denom]: prev[denom] + 1,
+    }));
   };
 
   const handleDecrement = (
@@ -156,64 +208,72 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
       "B_100000" | "B_50000" | "B_20000" | "B_10000" | "B_5000" | "B_2000"
     >
   ) => {
-    setFormData((prev) => {
-      const updatedFormData = {
-        ...prev,
-        [denom]: Math.max(prev[denom] - 1, 0),
-      };
-
-      const newSum_B =
-        updatedFormData.B_100000 * 100000 +
-        updatedFormData.B_50000 * 50000 +
-        updatedFormData.B_20000 * 20000 +
-        updatedFormData.B_10000 * 10000 +
-        updatedFormData.B_5000 * 5000 +
-        updatedFormData.B_2000 * 2000;
-
-      const diferencia = newSum_B - (checkin?.declarado || 0);
-
-      return { ...updatedFormData, Sum_B: newSum_B, diferencia };
-    });
+    setFormData((prev) => ({
+      ...prev,
+      [denom]: Math.max(prev[denom] - 1, 0),
+    }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    const numericValue = parseInt(value, 10);
 
+    setFormData((prev) => ({
+      ...prev,
+      [name]: isNaN(numericValue) ? 0 : numericValue,
+    }));
+  };
+
+  const handleTextChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async () => {
     try {
-      // Validar que la planilla sea válida
       if (!checkin) {
-        setError("Debes consultar una planilla válida antes de guardar.");
-        return;
+        throw new Error(
+          "Debes consultar una planilla válida antes de guardar."
+        );
       }
 
-      // Validar que los valores de los billetes sean positivos
-      const billetes = [
-        formData.B_100000,
-        formData.B_50000,
-        formData.B_20000,
-        formData.B_10000,
-        formData.B_5000,
-        formData.B_2000,
-      ];
-      if (billetes.some((value) => value < 0)) {
-        setError("Las cantidades de billetes no pueden ser negativas.");
-        return;
-      }
-
-      // Preparar los datos del servicio
+      // Crear el objeto serviceData con todos los campos requeridos
       const serviceData = {
-        ...formData,
+        planilla: formData.planilla,
+        sello: formData.sello,
+        estado: formData.estado,
+        observacion: formData.observacion,
+        B_100000: formData.B_100000,
+        B_50000: formData.B_50000,
+        B_20000: formData.B_20000,
+        B_10000: formData.B_10000,
+        B_5000: formData.B_5000,
+        B_2000: formData.B_2000,
+        Sum_B: formData.Sum_B,
+        diferencia: formData.diferencia,
         checkin_id: checkin.idCheckin,
         checkineroId: checkin.checkineroId,
         fondoId: checkin.fondoId,
         operarioId: formData.operarioId,
+        clienteId: checkin.clienteId,
+        fecharegistro: new Date().toISOString(),
       };
 
-      // Enviar los datos al servidor
-      const method = formData.idServicio ? "PUT" : "POST"; // Usar PUT si ya existe un servicio
+      console.log("Datos enviados al servidor:", serviceData); // Depuración
+
+      // Determinar si es una creación (POST) o actualización (PUT)
+      const method = formData.idServicio ? "PUT" : "POST";
       const endpoint = "/api/servicio";
 
+      // Enviar la solicitud al servidor
       const res = await fetch(endpoint, {
         method,
         headers: { "Content-Type": "application/json" },
@@ -221,100 +281,54 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
       });
 
       if (!res.ok) {
-        throw new Error("Error en la solicitud");
+        const errorData = await res.json(); // Obtener detalles del error
+        console.error("Error del servidor:", errorData); // Depuración
+        throw new Error(errorData.error || "Error en la solicitud");
       }
 
       // Mostrar mensaje de éxito
-      alert("Servicio guardado correctamente.");
+      toast({
+        title: "Éxito",
+        description: "Servicio guardado correctamente.",
+        variant: "normal",
+      });
+
+      // Limpiar los campos después de guardar
+      resetForm();
     } catch (error) {
-      setError("Error al enviar el formulario: " + error);
+      // Mostrar mensaje de error
+      toast({
+        title: "Error",
+        description: "Error al enviar el formulario: " + error,
+        variant: "destructive",
+      });
     }
   };
 
-  const consultar = async () => {
-    setError(null);
-    try {
-      const response = await fetch(
-        `/api/checkin?planilla=${formData.planilla}`
-      );
-      if (!response.ok) {
-        setError("La planilla debe ser válida");
-        return;
-      }
-
-      const data = await response.json();
-      setCheckin(data);
-
-      // Si hay un servicio asociado, actualiza el estado `formData`
-      if (data.servicio) {
-        setFormData((prev) => ({
-          ...prev,
-          ...data.servicio, // Actualiza con los datos del servicio
-        }));
-        setIsDisabled2(data.servicio.estado === "Inactivo"); // Deshabilita si el servicio está inactivo
-      }
-
-      setIsDisabled(true); // Deshabilita el campo de planilla después de consultar
-    } catch (error) {
-      setError("Error al consultar el checkin: " + error);
-    }
+  const handleConfirmSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsConfirmDialogOpen(true); // Mostrar el diálogo de confirmación
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        //Fetch usuarios
-        const usuariosRes = await fetch("/api/usuarios");
-        if (!usuariosRes.ok) throw new Error("Error al cargar usuarios");
-        const usuariosData = await usuariosRes.json();
-        setUsuarios(usuariosData);
-        // Fetch check-ins
-        const checkinsRes = await fetch("/api/checkins");
-        if (!checkinsRes.ok) throw new Error("Error al cargar check-ins");
-        const checkinsData = await checkinsRes.json();
-        setCheckin(checkinsData);
-      } catch (err) {
-        console.error("Error al cargar los datos:", err);
-      }
-    };
+  if (loading) {
+    return <Loading text="Cargando..." />;
+  }
 
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    if (checkin) {
-      const initialSum_B =
-        formData.B_100000 * 100000 +
-        formData.B_50000 * 50000 +
-        formData.B_20000 * 20000 +
-        formData.B_10000 * 10000 +
-        formData.B_5000 * 5000 +
-        formData.B_2000 * 2000;
-
-      const diferencia = initialSum_B - checkin.declarado;
-
-      setFormData((prev) => ({ ...prev, Sum_B: initialSum_B, diferencia }));
-    }
-  }, [
-    checkin,
-    formData.B_100000,
-    formData.B_50000,
-    formData.B_20000,
-    formData.B_10000,
-    formData.B_5000,
-    formData.B_2000,
-  ]);
+  if (error) {
+    return <Loading text={error} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-bl from-slate-400 to-cyan-800">
       <header className="bg-transparent text-white top-0 z-50 p-6">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-4xl font-bold">Bienvenido, {user.name}</h1>
-          {/* Accede directamente a user.name */}
+          <h1 className="text-4xl font-bold">
+            Bienvenido, {usuarios[0].name + " " + usuarios[0].lastname}
+          </h1>
           <nav>
             <ul className="flex space-x-4">
               <li>
-                <LogOutBtn text={"cerrar sesión"} />
+                <LogOutBtn text={"Cerrar sesión"} />
               </li>
             </ul>
           </nav>
@@ -327,11 +341,6 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
             <h2 className="text-2xl font-bold mb-6 text-gray-800">
               Factura de detallado de cliente
             </h2>
-            {error && (
-              <p className="mt-4 text-sm text-red-500 text-center font-semibold">
-                {error}
-              </p>
-            )}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mb-8">
               <div className="items-center gap-4">
                 <div className="flex-1">
@@ -350,14 +359,14 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                     className="border p-2 w-full"
                     value={formData.planilla}
                     onChange={handleInputChange}
-                    disabled={isDisabled} // Deshabilitar el input cuando sea necesario
+                    disabled={isDisabled}
                   />
                   <Button
                     type="button"
-                    onClick={consultar}
+                    onClick={isEditing ? consultar : habilitarEdicion}
                     className="bg-cyan-700 hover:bg-cyan-900"
                   >
-                    Consultar
+                    {isEditing ? "Consultar" : "Editar"}
                   </Button>
                 </div>
               </div>
@@ -411,289 +420,273 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
                   id="valorDeclarado"
                   name="valorDeclarado"
                   className="border p-2 w-full"
-                  value={checkin?.declarado}
+                  value={checkin?.declarado || ""}
                   readOnly
                 />
               </div>
             </div>
 
-            <h3 className="text-xl font-bold mb-6 text-gray-800">
-              Cantidad de Billetes por Denominación
-            </h3>
-            <div>
-              <div className="overflow-x-auto">
-                <Table className="w-full mt-4 border border-gray-300">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="px-4 py-2 text-left">
-                        Denominación
-                      </TableHead>
-                      <TableHead className="px-4 py-2 text-left">
-                        Cantidad
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {/* Billete de 100,000 */}
-                    <TableRow>
-                      <TableCell className="px-4 py-2">$100,000</TableCell>
-                      <TableCell className="flex items-center gap-2 px-4 py-2">
-                        <Button
-                          disabled={isDisabled2}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDecrement("B_100000")}
-                        >
-                          <Minus />
-                        </Button>
-                        <input
-                          disabled={isDisabled2}
-                          type="number"
-                          name="B_100000"
-                          className="border p-1 w-16 text-center"
-                          value={
-                            checkin?.servicio?.B_100000 || formData.B_100000
-                          }
-                          onChange={handleInputChange}
-                        />
-                        <Button
-                          disabled={isDisabled2}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleIncrement("B_100000")}
-                        >
-                          <Plus />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    {/* Billete de 50,000 */}
-                    <TableRow>
-                      <TableCell className="px-4 py-2">$50,000</TableCell>
-                      <TableCell className="flex items-center gap-2 px-4 py-2">
-                        <Button
-                          disabled={isDisabled2}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDecrement("B_50000")}
-                        >
-                          <Minus />
-                        </Button>
-                        <input
-                          disabled={isDisabled2}
-                          type="number"
-                          name="B_50000"
-                          className="border p-1 w-16 text-center"
-                          value={checkin?.servicio?.B_50000 || formData.B_50000}
-                          onChange={handleInputChange}
-                        />
-                        <Button
-                          disabled={isDisabled2}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleIncrement("B_50000")}
-                        >
-                          <Plus />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    {/* Billete de 20,000 */}
-                    <TableRow>
-                      <TableCell className="px-4 py-2">$20,000</TableCell>
-                      <TableCell className="flex items-center gap-2 px-4 py-2">
-                        <Button
-                          disabled={isDisabled2}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDecrement("B_20000")}
-                        >
-                          <Minus />
-                        </Button>
-                        <input
-                          disabled={isDisabled2}
-                          type="number"
-                          name="B_20000"
-                          className="border p-1 w-16 text-center"
-                          value={checkin?.servicio?.B_20000 || formData.B_20000}
-                          onChange={handleInputChange}
-                        />
-                        <Button
-                          disabled={isDisabled2}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleIncrement("B_20000")}
-                        >
-                          <Plus />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    {/* Billete de 10,000 */}
-                    <TableRow>
-                      <TableCell className="px-4 py-2">$10,000</TableCell>
-                      <TableCell className="flex items-center gap-2 px-4 py-2">
-                        <Button
-                          disabled={isDisabled2}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDecrement("B_10000")}
-                        >
-                          <Minus />
-                        </Button>
-                        <input
-                          disabled={isDisabled2}
-                          type="number"
-                          name="B_10000"
-                          className="border p-1 w-16 text-center"
-                          value={checkin?.servicio?.B_10000 || formData.B_10000}
-                          onChange={handleInputChange}
-                        />
-                        <Button
-                          disabled={isDisabled2}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleIncrement("B_10000")}
-                        >
-                          <Plus />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    {/* Billete de 5,000 */}
-                    <TableRow>
-                      <TableCell className="px-4 py-2">$5,000</TableCell>
-                      <TableCell className="flex items-center gap-2 px-4 py-2">
-                        <Button
-                          disabled={isDisabled2}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDecrement("B_5000")}
-                        >
-                          <Minus />
-                        </Button>
-                        <input
-                          disabled={isDisabled2}
-                          type="number"
-                          name="B_5000"
-                          className="border p-1 w-16 text-center"
-                          value={checkin?.servicio?.B_5000 || formData.B_5000}
-                          onChange={handleInputChange}
-                        />
-                        <Button
-                          disabled={isDisabled2}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleIncrement("B_5000")}
-                        >
-                          <Plus />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    {/* Billete de 2,000 */}
-                    <TableRow>
-                      <TableCell className="px-4 py-2">$2,000</TableCell>
-                      <TableCell className="flex items-center gap-2 px-4 py-2">
-                        <Button
-                          disabled={isDisabled2}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDecrement("B_2000")}
-                        >
-                          <Minus />
-                        </Button>
-                        <input
-                          disabled={isDisabled2}
-                          type="number"
-                          name="B_2000"
-                          className="border p-1 w-16 text-center"
-                          value={checkin?.servicio?.B_2000 || formData.B_2000}
-                          onChange={handleInputChange}
-                        />
-                        <Button
-                          disabled={isDisabled2}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleIncrement("B_2000")}
-                        >
-                          <Plus />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    {/* Fila para el total */}
-                    <TableRow>
-                      <TableCell className="px-4 py-2 font-bold">
-                        Total
-                      </TableCell>
-                      <TableCell className="px-4 py-2">
-                        <input
-                          disabled={isDisabled2}
-                          type="text"
-                          value={checkin?.servicio?.Sum_B || formData.Sum_B}
-                          readOnly
-                          className="border p-1 w-full text-center"
-                        />
-                      </TableCell>
-                    </TableRow>
-                    {/* Fila para la diferencia */}
-                    <TableRow>
-                      <TableCell className="px-4 py-2 font-bold">
-                        Diferencia
-                      </TableCell>
-                      <TableCell className="px-4 py-2">
-                        <input
-                          disabled={isDisabled2}
-                          type="text"
-                          value={
-                            checkin?.servicio?.diferencia ||
-                            formData.diferencia ||
-                            0
-                          }
-                          readOnly
-                          className="border p-1 w-full text-center"
-                        />
-                      </TableCell>
-                    </TableRow>
-                    {/* Fila para la observación */}
-                    <TableRow>
-                      <TableCell colSpan={2} className="px-4 py-2">
-                        <label
-                          htmlFor="observacion"
-                          className="block font-bold mb-2"
-                        >
-                          Observación:
-                        </label>
-                        <Textarea
-                          disabled={isDisabled2}
-                          id="observacion"
-                          name="observacion"
-                          className="border p-2 w-full"
-                          value={
-                            checkin?.servicio?.observacion ||
-                            formData.observacion
-                          }
-                          onChange={handleTextChange}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
+            {/* Tabla de billetes */}
+            <Table className="w-full mt-4 border border-gray-300">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="px-4 py-2 text-left">
+                    Denominación
+                  </TableHead>
+                  <TableHead className="px-4 py-2 text-left">
+                    Cantidad
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {/* Billete de 100,000 */}
+                <TableRow>
+                  <TableCell className="px-4 py-2">$100,000</TableCell>
+                  <TableCell className="flex items-center gap-2 px-4 py-2">
+                    <Button
+                      disabled={isDisabled2}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDecrement("B_100000")}
+                    >
+                      <Minus />
+                    </Button>
+                    <input
+                      disabled={isDisabled2}
+                      type="number"
+                      name="B_100000"
+                      className="border p-1 w-16 text-center"
+                      value={formData.B_100000}
+                      onChange={handleInputChange}
+                    />
+                    <Button
+                      disabled={isDisabled2}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleIncrement("B_100000")}
+                    >
+                      <Plus />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+                {/* Billete de 50,000 */}
+                <TableRow>
+                  <TableCell className="px-4 py-2">$50,000</TableCell>
+                  <TableCell className="flex items-center gap-2 px-4 py-2">
+                    <Button
+                      disabled={isDisabled2}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDecrement("B_50000")}
+                    >
+                      <Minus />
+                    </Button>
+                    <input
+                      disabled={isDisabled2}
+                      type="number"
+                      name="B_50000"
+                      className="border p-1 w-16 text-center"
+                      value={checkin?.servicio?.B_50000 || formData.B_50000}
+                      onChange={handleInputChange}
+                    />
+                    <Button
+                      disabled={isDisabled2}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleIncrement("B_50000")}
+                    >
+                      <Plus />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+                {/* Billete de 20,000 */}
+                <TableRow>
+                  <TableCell className="px-4 py-2">$20,000</TableCell>
+                  <TableCell className="flex items-center gap-2 px-4 py-2">
+                    <Button
+                      disabled={isDisabled2}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDecrement("B_20000")}
+                    >
+                      <Minus />
+                    </Button>
+                    <input
+                      disabled={isDisabled2}
+                      type="number"
+                      name="B_20000"
+                      className="border p-1 w-16 text-center"
+                      value={checkin?.servicio?.B_20000 || formData.B_20000}
+                      onChange={handleInputChange}
+                    />
+                    <Button
+                      disabled={isDisabled2}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleIncrement("B_20000")}
+                    >
+                      <Plus />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+                {/* Billete de 10,000 */}
+                <TableRow>
+                  <TableCell className="px-4 py-2">$10,000</TableCell>
+                  <TableCell className="flex items-center gap-2 px-4 py-2">
+                    <Button
+                      disabled={isDisabled2}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDecrement("B_10000")}
+                    >
+                      <Minus />
+                    </Button>
+                    <input
+                      disabled={isDisabled2}
+                      type="number"
+                      name="B_10000"
+                      className="border p-1 w-16 text-center"
+                      value={checkin?.servicio?.B_10000 || formData.B_10000}
+                      onChange={handleInputChange}
+                    />
+                    <Button
+                      disabled={isDisabled2}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleIncrement("B_10000")}
+                    >
+                      <Plus />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+                {/* Billete de 5,000 */}
+                <TableRow>
+                  <TableCell className="px-4 py-2">$5,000</TableCell>
+                  <TableCell className="flex items-center gap-2 px-4 py-2">
+                    <Button
+                      disabled={isDisabled2}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDecrement("B_5000")}
+                    >
+                      <Minus />
+                    </Button>
+                    <input
+                      disabled={isDisabled2}
+                      type="number"
+                      name="B_5000"
+                      className="border p-1 w-16 text-center"
+                      value={checkin?.servicio?.B_5000 || formData.B_5000}
+                      onChange={handleInputChange}
+                    />
+                    <Button
+                      disabled={isDisabled2}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleIncrement("B_5000")}
+                    >
+                      <Plus />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+                {/* Billete de 2,000 */}
+                <TableRow>
+                  <TableCell className="px-4 py-2">$2,000</TableCell>
+                  <TableCell className="flex items-center gap-2 px-4 py-2">
+                    <Button
+                      disabled={isDisabled2}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDecrement("B_2000")}
+                    >
+                      <Minus />
+                    </Button>
+                    <input
+                      disabled={isDisabled2}
+                      type="number"
+                      name="B_2000"
+                      className="border p-1 w-16 text-center"
+                      value={checkin?.servicio?.B_2000 || formData.B_2000}
+                      onChange={handleInputChange}
+                    />
+                    <Button
+                      disabled={isDisabled2}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleIncrement("B_2000")}
+                    >
+                      <Plus />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+                {/* Fila para el total */}
+                <TableRow>
+                  <TableCell className="px-4 py-2 font-bold">Total</TableCell>
+                  <TableCell className="px-4 py-2">
+                    <input
+                      disabled={isDisabled2}
+                      type="text"
+                      value={checkin?.servicio?.Sum_B || formData.Sum_B}
+                      readOnly
+                      className="border p-1 w-full text-center"
+                    />
+                  </TableCell>
+                </TableRow>
+                {/* Fila para la diferencia */}
+                <TableRow>
+                  <TableCell className="px-4 py-2 font-bold">
+                    Diferencia
+                  </TableCell>
+                  <TableCell className="px-4 py-2">
+                    <input
+                      disabled={isDisabled2}
+                      type="text"
+                      value={
+                        checkin?.servicio?.diferencia ||
+                        formData.diferencia ||
+                        0
+                      }
+                      readOnly
+                      className="border p-1 w-full text-center"
+                    />
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+
+            {/* Observación */}
+            <div className="mt-6">
+              <label htmlFor="observacion" className="block font-bold mb-2">
+                Observación:
+              </label>
+              <Textarea
+                disabled={isDisabled2}
+                id="observacion"
+                name="observacion"
+                className="border p-2 w-full"
+                value={checkin?.servicio?.observacion || formData.observacion}
+                onChange={handleTextChange}
+              />
             </div>
 
             <div className="flex justify-center space-x-4 mt-6">
               <Button
                 disabled={isDisabled2}
-                type="submit"
+                type="button" // Cambiar a type="button" para evitar el envío automático del formulario
                 className="bg-cyan-700 hover:bg-cyan-900"
+                onClick={handleConfirmSubmit} // Llamar a handleConfirmSubmit
               >
                 Guardar y cerrar
               </Button>
@@ -701,6 +694,26 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
           </form>
         </Card>
       </main>
+      <AlertDialog
+        open={isConfirmDialogOpen}
+        onOpenChange={setIsConfirmDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción guardará el servicio, no sera posible editarlo despues
+              y limpiará el formulario. ¿Deseas continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSubmit}>
+              Continuar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -10,7 +10,7 @@ export async function GET(req: Request) {
     const planilla = url.searchParams.get("planilla");
 
     if (planilla) {
-      // Buscar check-in por planilla
+      console.log("Buscando checkin con planilla:", planilla); // Log para depuración
       const checkin = await prisma.checkin.findFirst({
         where: { planilla: parseInt(planilla, 10) },
         include: {
@@ -23,12 +23,14 @@ export async function GET(req: Request) {
       });
 
       if (!checkin) {
+        console.log("Checkin no encontrado para planilla:", planilla); // Log para depuración
         return NextResponse.json(
           { error: "Checkin no encontrado" },
           { status: 404 }
         );
       }
 
+      console.log("Checkin encontrado:", checkin); // Log para depuración
       return NextResponse.json(checkin, { status: 200 });
     }
 

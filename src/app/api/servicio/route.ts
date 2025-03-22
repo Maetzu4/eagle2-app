@@ -5,14 +5,12 @@ import { NextResponse } from "next/server";
 // Crear un nuevo servicio
 export async function POST(req: Request) {
   try {
-    // Parseamos el cuerpo de la solicitud
     const data = await req.json();
 
-    // Validación de los datos necesarios
+    // Validar campos obligatorios
     const {
       planilla,
       sello,
-      fecharegistro,
       estado,
       observacion,
       B_100000,
@@ -30,11 +28,9 @@ export async function POST(req: Request) {
       clienteId,
     } = data;
 
-    // Validación básica de campos obligatorios
     if (
       !planilla ||
       !sello ||
-      !fecharegistro ||
       !checkin_id ||
       !checkineroId ||
       !fondoId ||
@@ -47,22 +43,12 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validar que `fecharegistro` esté en formato correcto (opcional)
-    const fechaRegistroValida = new Date(fecharegistro);
-    if (isNaN(fechaRegistroValida.getTime())) {
-      return NextResponse.json(
-        { error: "La fecha de registro no es válida." },
-        { status: 400 }
-      );
-    }
-
-    // Crear el registro en la base de datos
+    // Crear el servicio en la base de datos
     const servicio = await prisma.servicio.create({
       data: {
         planilla,
         sello,
-        //fecharegistro: fechaRegistroValida,
-        estado: estado || "Activo", // Default: 'Activo'
+        estado: estado || "Activo",
         observacion: observacion || "",
         B_100000: B_100000 || 0,
         B_50000: B_50000 || 0,
@@ -80,7 +66,6 @@ export async function POST(req: Request) {
       },
     });
 
-    // Devolver respuesta exitosa
     return NextResponse.json(
       { message: "Servicio creado exitosamente", servicio },
       { status: 201 }
@@ -102,8 +87,7 @@ export async function GET() {
         idServicio: true,
         planilla: true,
         sello: true,
-        estado: true, // Asegúrate de incluir esta propiedad
-        //fecharegistro: true,
+        estado: true,
         Sum_B: true,
         B_100000: true,
         B_50000: true,
@@ -112,7 +96,7 @@ export async function GET() {
         B_5000: true,
         B_2000: true,
         fondoId: true,
-        fondo: true, // Si necesitas la relación con Fondo
+        fondo: true,
       },
     });
     return NextResponse.json(servicios);
@@ -134,7 +118,6 @@ export async function PUT(req: Request) {
       planilla,
       sello,
       estado,
-      //fecharegistro,
       observacion,
       B_100000,
       B_50000,
@@ -151,7 +134,6 @@ export async function PUT(req: Request) {
       clienteId,
     } = body;
 
-    // Validar el ID del servicio
     if (!idServicio) {
       return NextResponse.json(
         { error: "El ID del servicio es requerido" },
@@ -159,7 +141,6 @@ export async function PUT(req: Request) {
       );
     }
 
-    // Verificar si el servicio existe
     const servicioExists = await prisma.servicio.findUnique({
       where: { idServicio },
     });
@@ -170,14 +151,12 @@ export async function PUT(req: Request) {
       );
     }
 
-    // Actualizar el servicio
     const updatedServicio = await prisma.servicio.update({
       where: { idServicio },
       data: {
         planilla,
         sello,
         estado,
-        //fecharegistro: new Date(fecharegistro),
         observacion,
         B_100000,
         B_50000,

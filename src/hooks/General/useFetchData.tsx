@@ -1,3 +1,4 @@
+//@/hooks/General/useFetchData.tsx
 "use client";
 import { useState, useEffect } from "react";
 import { Checkin, Cliente, Usuario, RutaLlegada } from "@/types/interfaces";
@@ -50,5 +51,14 @@ export function useFetchData(userEmail: string) {
     fetchData();
   }, [userEmail]); // Dependencia: userEmail
 
-  return { usuarios, checkin, clientes, rutas, loading, error, setCheckin };
+  return {
+    usuarios,
+    checkin,
+    clientes,
+    rutas,
+    loading,
+    error,
+    setCheckin,
+    setError,
+  };
 }
