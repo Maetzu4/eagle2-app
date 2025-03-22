@@ -1,8 +1,8 @@
-//app/chekin/page.tsx
+//@/app/chekin/page.tsx
 import { auth } from "@/auth";
-import CheckinLlegadas from "./page.client";
+import CheckinLlegadas from "@/app/checkin/page.client";
 import LogOutBtn from "@/components/Auth/logOutBtn";
-import { user } from "@/types/checkin";
+import { user } from "@/types/interfaces";
 
 async function CheckinLlegadasContainer() {
   const session = await auth();

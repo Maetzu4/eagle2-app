@@ -1,3 +1,4 @@
+//@/app/api/clientes/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma"; // Asegúrate de tener prisma en la carpeta lib
 

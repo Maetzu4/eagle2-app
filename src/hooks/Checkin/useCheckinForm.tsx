@@ -1,6 +1,6 @@
-// hooks/useCheckinForm.ts
+// @/hooks/Checkin/useCheckinForm.ts
 import { useState } from "react";
-import { Checkin, Cliente } from "@/types/checkin";
+import { Checkin, Cliente } from "@/types/interfaces";
 import { useToast } from "@/hooks/General/use-toast";
 
 export const useCheckinForm = (

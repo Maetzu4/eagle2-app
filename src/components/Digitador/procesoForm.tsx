@@ -1,6 +1,6 @@
-// src/components/Digitador/ProcesoForm.tsx
+// @/components/Digitador/procesoForm.tsx
 import { Button } from "@/components/ui/button";
-import { Fondo } from "@/types/checkin";
+import { Fondo } from "@/types/interfaces";
 
 interface ProcesoFormProps {
   fondos: Fondo[];

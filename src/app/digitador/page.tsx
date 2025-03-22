@@ -1,6 +1,6 @@
 //app/digitador/page.txs
 import { auth } from "@/auth";
-import DigitadorOpciones from "./page.client";
+import { DigitadorOpciones } from "@/app/digitador/page.client";
 import LogOutBtn from "@/components/Auth/logOutBtn";
 
 async function DigitadorOpcionesContainer() {

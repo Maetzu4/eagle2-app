@@ -1,6 +1,7 @@
+//@/components/Checkin/checkinForm.tsx
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Checkin, Cliente, RutaLlegada } from "@/types/checkin";
+import { Checkin, Cliente, RutaLlegada } from "@/types/interfaces";
 
 interface CheckinFormProps {
   formData: Checkin;

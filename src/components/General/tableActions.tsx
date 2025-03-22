@@ -49,10 +49,12 @@ export function TableActions({
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogCancel className="hover:bg-cyan-700">
+                Cancelar
+              </AlertDialogCancel>
               <AlertDialogAction
                 onClick={onDelete}
-                className="bg-red-600 text-white hover:bg-red-700"
+                className="bg-red-600 text-white hover:bg-red-800"
               >
                 Continuar
               </AlertDialogAction>

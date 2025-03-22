@@ -1,3 +1,4 @@
+//@/components/General/tableHeader.tsx
 import { flexRender, Table } from "@tanstack/react-table";
 import {
   TableHead,

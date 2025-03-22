@@ -1,3 +1,4 @@
+//@/components/General/loaging.tsx
 import React from "react";
 interface LoadingProps {
   text: string;

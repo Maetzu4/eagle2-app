@@ -1,6 +1,5 @@
-// src/components/Digitador/FondosTable.tsx
+// @/components/Digitador/fondosTable.tsx
 "use client";
-
 import {
   Table,
   TableHeader,
@@ -9,7 +8,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
-import { Fondo } from "@/types/checkin";
+import { Fondo } from "@/types/interfaces";
 
 interface FondosTableProps {
   fondos: Fondo[];

@@ -1,7 +1,7 @@
-// app/api/fondos/route.ts
+// @/app/api/fondos/route.ts
 
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";  // Asegúrate de tener prisma en la carpeta lib
+import { prisma } from "@/lib/prisma"; // Asegúrate de tener prisma en la carpeta lib
 
 export async function GET() {
   try {
@@ -14,11 +14,14 @@ export async function GET() {
         checkins: true,
         servicios: true,
         fecha_de_cierre: true,
-      }
+      },
     });
     return NextResponse.json(fondos);
   } catch (error) {
     console.error("Error al obtener los fondos:", error);
-    return NextResponse.json({ error: "Error al obtener los fondos" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Error al obtener los fondos" },
+      { status: 500 }
+    );
   }
 }

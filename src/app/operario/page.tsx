@@ -1,5 +1,6 @@
+//@/app/operario/page.tsx
 import { auth } from "@/auth";
-import IngresoFactura from "./page.cliente";
+import IngresoFactura from "@/app/operario/page.cliente";
 import LogOutBtn from "@/components/Auth/logOutBtn";
 import { prisma } from "@/lib/prisma";
 

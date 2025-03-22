@@ -1,3 +1,4 @@
+//@/app/not-found.tsx
 import LogOutBtn from "@/components/Auth/logOutBtn";
 
 export default function NotFound() {

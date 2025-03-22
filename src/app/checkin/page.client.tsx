@@ -1,9 +1,10 @@
+//@/app/Checkin/page.client.tsx
 "use client";
 import { useEffect } from "react";
 import { CheckinForm } from "@/components/Checkin/checkinForm";
 import LogOutBtn from "@/components/Auth/logOutBtn";
 import { useCheckin } from "@/hooks/Checkin/useCheckin";
-import { Checkin, user } from "@/types/checkin";
+import { Checkin, user } from "@/types/interfaces";
 import { DataTable } from "@/components/Checkin/dataTableCheckin";
 import { useToast } from "@/hooks/General/use-toast";
 import { useCheckinForm } from "@/hooks/Checkin/useCheckinForm";
@@ -62,7 +63,9 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
     <div className="min-h-screen bg-gradient-to-bl from-slate-400 to-cyan-800">
       <header className="bg-transparent text-white top-0 z-50 p-6">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-4xl font-bold">Bienvenido, {user.name}</h1>
+          <h1 className="text-4xl font-bold">
+            Bienvenido, {usuarios[0].name + " " + usuarios[0].lastname}
+          </h1>
           <nav>
             <ul className="flex space-x-4">
               <li>

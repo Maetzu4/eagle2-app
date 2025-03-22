@@ -1,7 +1,7 @@
+//@/app/hooks/Checkin/useCheckin.tsx
 "use client";
-
 import { useState, useEffect } from "react";
-import { Checkin, Cliente, Usuario, RutaLlegada } from "@/types/checkin";
+import { Checkin, Cliente, Usuario, RutaLlegada } from "@/types/interfaces";
 
 // Modifica el hook useCheckin para obtener rutas
 export function useCheckin(userEmail: string) {

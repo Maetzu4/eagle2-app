@@ -1,4 +1,4 @@
-// src/types/checkin.ts
+// @/types/interfaces.ts
 
 // Interfaz para el cliente
 export interface Cliente {

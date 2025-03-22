@@ -1,3 +1,4 @@
+//@/components/General/pagination.tsx
 import { Button } from "@/components/ui/button";
 import { Table } from "@tanstack/react-table";
 

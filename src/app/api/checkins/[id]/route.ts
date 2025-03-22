@@ -1,7 +1,7 @@
-// app/api/checkins/[id]/route.ts
+// @/app/api/checkins/[id]/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Checkin } from "@/types/checkin";
+import { Checkin } from "@/types/interfaces";
 
 // Actualizar un check-in
 export async function PUT(

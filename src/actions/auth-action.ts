@@ -1,5 +1,5 @@
+//@/actions/auth-ations.ts
 "use server";
-
 import { z } from "zod";
 import { loginSchema } from "@/lib/loginShema";
 import { signIn } from "@/auth";
@@ -15,8 +15,7 @@ export const LoginAction = async (data: LoginFormValues) => {
       redirect: false,
     });
 
-    return {success: true};
-
+    return { success: true };
   } catch (error) {
     if (error instanceof AuthError) {
       return { error: error.cause?.err?.message };

@@ -1,5 +1,5 @@
+//@/componets/Checkin/dataTableCheckin.tsx
 "use client";
-
 import * as React from "react";
 import {
   ColumnFiltersState,
@@ -12,7 +12,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Card } from "@/components/ui/card";
-import { Checkin } from "@/types/checkin";
+import { Checkin } from "@/types/interfaces";
 import { columns } from "./columnsCheckin";
 import { globalFilterFn } from "./utils";
 import { Pagination } from "@/components/General/pagination";

@@ -1,3 +1,4 @@
+//@/components/General/searchBar.tsx
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 

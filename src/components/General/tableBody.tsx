@@ -1,3 +1,4 @@
+//@/components/General/tableBody.tsx
 import { flexRender, Table, Column } from "@tanstack/react-table";
 import {
   TableBody as TableBodyUI,

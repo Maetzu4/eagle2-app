@@ -1,5 +1,6 @@
+//@/components/Checkin/utils.tsx
 import { Row } from "@tanstack/react-table";
-import { Checkin, Usuario, Cliente, Fondo } from "@/types/checkin";
+import { Checkin, Usuario, Cliente, Fondo } from "@/types/interfaces";
 
 // Función de filtrado global
 export const globalFilterFn = (

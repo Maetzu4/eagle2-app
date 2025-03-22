@@ -1,7 +1,7 @@
-// app/api/checkins/route.ts
+// @/app/api/checkins/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Checkin } from "@/types/checkin";
+import { Checkin } from "@/types/interfaces";
 
 // Obtener todos los check-ins o buscar por planilla
 export async function GET(req: Request) {
