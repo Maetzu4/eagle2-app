@@ -14,96 +14,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Minus, Plus } from "lucide-react";
 import React, { useEffect, useState } from "react";
-
-// Interfaces (sin cambios)
-interface Checkin {
-  idCheckin?: number;
-  planilla: number;
-  sello: number;
-  clienteId: number;
-  clientes: {
-    idCliente: number;
-    name: string;
-    sede: string;
-    fondoId: number;
-    checkin_id: number;
-  };
-  declarado: number;
-  ruta_llegada: number;
-  fechaRegistro: Date;
-  checkineroId: number;
-  checkinero: {
-    idCheckinero: number;
-    usuario_id: number;
-  };
-  fondoId: number;
-  fondo: {
-    idFondo: number;
-    nombre: string;
-    tipo: string;
-  };
-  servicio: servicio;
-}
-
-interface servicio {
-  idServicio?: number;
-  planilla?: number;
-  sello?: number;
-  fecharegistro: Date;
-  estado: string;
-  clienteId?: number;
-  observacion: string;
-  diferencia: number;
-  B_100000: number;
-  B_50000: number;
-  B_20000: number;
-  B_10000: number;
-  B_5000: number;
-  B_2000: number;
-  Sum_B: number;
-  checkin_id: number;
-  checkineroId: number;
-  fondoId: number;
-  operarioId: number;
-}
-
-interface usuarios {
-  idUsuario: number;
-  name: string;
-  email: string;
-  status: string;
-  role: string;
-  checkinero: {
-    idCheckinero: number;
-    usuario_id: number;
-  };
-  operario: {
-    idOperario: number;
-    usuario_id: number;
-  };
-  digitador: {
-    idDigitador: number;
-    usuario_id: number;
-  };
-  Sede: string;
-}
-
-// interface Session {
-//   user: {
-//     id: string;
-//     name: string;
-//     email: string;
-//     role?: string;
-//   };
-// }
+import { Checkin, Servicio, user, Usuario } from "@/types/interfaces";
 
 interface IngresoFacturaProps {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    role?: string;
-  }; // Ajusta la interfaz para que coincida con lo que estás pasando
+  user: user;
 }
 
 const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
@@ -111,10 +25,13 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
   const [checkin, setCheckin] = useState<Checkin>();
   const [isDisabled, setIsDisabled] = useState(false);
   const [isDisabled2, setIsDisabled2] = useState(false);
-  const [usuarios, setUsuarios] = useState<usuarios[]>([]);
-  const [formData, setFormData] = useState<servicio>({
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [formData, setFormData] = useState<Servicio>({
+    idServicio: 0, // Valor inicial para idServicio
+    planilla: 0, // Valor inicial para planilla
+    sello: 0, // Valor inicial para sello
     Sum_B: 0,
-    estado: "",
+    estado: "Activo",
     observacion: "",
     diferencia: 0,
     fecharegistro: new Date(),
@@ -130,6 +47,40 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
     operarioId: 0,
   });
 
+  useEffect(() => {
+    if (checkin) {
+      const newSum_B =
+        formData.B_100000 * 100000 +
+        formData.B_50000 * 50000 +
+        formData.B_20000 * 20000 +
+        formData.B_10000 * 10000 +
+        formData.B_5000 * 5000 +
+        formData.B_2000 * 2000;
+
+      const diferencia = newSum_B - checkin.declarado;
+
+      setFormData((prev) => ({
+        ...prev,
+        Sum_B: newSum_B,
+        diferencia,
+      }));
+    }
+  }, [
+    formData.B_100000,
+    formData.B_50000,
+    formData.B_20000,
+    formData.B_10000,
+    formData.B_5000,
+    formData.B_2000,
+    checkin,
+  ]);
+
+  useEffect(() => {
+    if (checkin?.servicio?.estado === "Inactivo") {
+      setIsDisabled2(true); // Deshabilita los campos si el servicio está inactivo
+    }
+  }, [checkin]);
+
   const handleTextChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -137,13 +88,13 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
 
     // Encuentra el operario en línea
     const operarioEnLinea = usuarios.find(
-      (operario) => operario.email === user.email
-    )?.operario;
+      (usuario) => usuario.email === user.email
+    );
 
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-      operarioId: operarioEnLinea?.idOperario || prev.operarioId, // Actualiza el operarioId si es necesario
+      operarioId: operarioEnLinea?.idUsuario || prev.operarioId, // Usa idUsuario en lugar de idOperario
     }));
   };
 
@@ -175,7 +126,7 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
 
   const handleIncrement = (
     denom: keyof Pick<
-      servicio,
+      Servicio,
       "B_100000" | "B_50000" | "B_20000" | "B_10000" | "B_5000" | "B_2000"
     >
   ) => {
@@ -201,7 +152,7 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
 
   const handleDecrement = (
     denom: keyof Pick<
-      servicio,
+      Servicio,
       "B_100000" | "B_50000" | "B_20000" | "B_10000" | "B_5000" | "B_2000"
     >
   ) => {
@@ -226,43 +177,41 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    setError(null);
     e.preventDefault();
+    setError(null);
+
     try {
-      if (formData.planilla === 0) {
-        setError("el numero de planilla debe ser mayor a 0");
+      // Validar que la planilla sea válida
+      if (!checkin) {
+        setError("Debes consultar una planilla válida antes de guardar.");
         return;
       }
 
+      // Validar que los valores de los billetes sean positivos
+      const billetes = [
+        formData.B_100000,
+        formData.B_50000,
+        formData.B_20000,
+        formData.B_10000,
+        formData.B_5000,
+        formData.B_2000,
+      ];
+      if (billetes.some((value) => value < 0)) {
+        setError("Las cantidades de billetes no pueden ser negativas.");
+        return;
+      }
+
+      // Preparar los datos del servicio
       const serviceData = {
         ...formData,
-        planilla: checkin?.planilla || 0, // Valor del checkin
-        sello: checkin?.sello || 0, // Valor del checkin
-        estado: "Inactivo", // Default: Activo
-        observacion: formData.observacion || "",
-
-        // Valores relacionados con billetes
-        B_100000: formData.B_100000,
-        B_50000: formData.B_50000,
-        B_20000: formData.B_20000,
-        B_10000: formData.B_10000,
-        B_5000: formData.B_5000,
-        B_2000: formData.B_2000,
-        Sum_B: formData.Sum_B,
-        diferencia: formData.diferencia,
-
-        // Relacionados con otros modelos
-        fecharegistro: new Date(formData.fecharegistro).toISOString(),
-        clienteId: checkin?.clienteId || 0,
-        checkin_id: checkin?.idCheckin || 0,
-        checkineroId: checkin?.checkineroId || 0,
-        fondoId: checkin?.fondoId || 0,
-        operarioId: formData.operarioId || 0,
+        checkin_id: checkin.idCheckin,
+        checkineroId: checkin.checkineroId,
+        fondoId: checkin.fondoId,
+        operarioId: formData.operarioId,
       };
 
-      console.log("Formulario enviado:", serviceData);
-
-      const method = /* formData.idCheckin ? "PUT" : */ "POST"; // Usar PUT si hay un ID
+      // Enviar los datos al servidor
+      const method = formData.idServicio ? "PUT" : "POST"; // Usar PUT si ya existe un servicio
       const endpoint = "/api/servicio";
 
       const res = await fetch(endpoint, {
@@ -274,8 +223,11 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
       if (!res.ok) {
         throw new Error("Error en la solicitud");
       }
+
+      // Mostrar mensaje de éxito
+      alert("Servicio guardado correctamente.");
     } catch (error) {
-      console.error("Error al enviar el formulario:", error);
+      setError("Error al enviar el formulario: " + error);
     }
   };
 
@@ -285,25 +237,24 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
       const response = await fetch(
         `/api/checkin?planilla=${formData.planilla}`
       );
-
       if (!response.ok) {
         setError("La planilla debe ser válida");
         return;
       }
 
       const data = await response.json();
-
-      // Validar el estado del servicio directamente desde la respuesta
-      if (data?.servicio?.estado === "Inactivo") {
-        setError("Conteo cerrado, no esta permitido hacer cambios");
-        setIsDisabled2(true);
-      }
-
-      // Asignar el checkin obtenido al estado
       setCheckin(data);
 
-      // Deshabilitar el input al obtener la respuesta correcta
-      setIsDisabled(true);
+      // Si hay un servicio asociado, actualiza el estado `formData`
+      if (data.servicio) {
+        setFormData((prev) => ({
+          ...prev,
+          ...data.servicio, // Actualiza con los datos del servicio
+        }));
+        setIsDisabled2(data.servicio.estado === "Inactivo"); // Deshabilita si el servicio está inactivo
+      }
+
+      setIsDisabled(true); // Deshabilita el campo de planilla después de consultar
     } catch (error) {
       setError("Error al consultar el checkin: " + error);
     }

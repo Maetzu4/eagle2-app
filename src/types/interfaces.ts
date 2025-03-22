@@ -39,8 +39,10 @@ export interface FechaCierre {
 export interface Servicio {
   idServicio: number;
   planilla: number;
+  observacion: string;
   sello: number;
   estado: "Activo" | "Inactivo";
+  diferencia: number;
   fecharegistro: Date;
   Sum_B: number;
   B_100000: number;

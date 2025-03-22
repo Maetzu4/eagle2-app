@@ -1,13 +1,18 @@
 //@/app/operario/page.tsx
 import { auth } from "@/auth";
-import IngresoFactura from "@/app/operario/page.cliente";
+import IngresoFactura from "@/app/operario/page.client";
 import LogOutBtn from "@/components/Auth/logOutBtn";
-import { prisma } from "@/lib/prisma";
+import { user } from "@/types/interfaces";
 
 async function IngresoFacturaContainer() {
   const session = await auth();
   let texto = "";
-
+  const userr: user = {
+    id: session?.user.id || "",
+    name: session?.user.name || "",
+    role: session?.user.role || "",
+    email: session?.user.email || "",
+  };
   if (!session) {
     texto = "Volver para iniciar sesión";
     return (
@@ -24,36 +29,11 @@ async function IngresoFacturaContainer() {
     );
   }
 
-  // Obtén datos adicionales del usuario desde la base de datos
-  const user = await prisma.usuario.findUnique({
-    where: {
-      email: session.user?.email || "", // Usa el email de la sesión
-    },
-    select: {
-      idUsuario: true, // Usa idUsuario en lugar de id
-      name: true,
-      email: true,
-      role: true,
-    },
-  });
+  // Extraer el rol de la sesión
+  const rol = session.user?.role || "";
 
-  if (!user) {
-    texto = "Volver para iniciar sesión";
-    return (
-      <div className="flex flex-col justify-center items-center h-screen bg-gradient-to-bl from-slate-400 to-cyan-800 space-y-20">
-        <div className="text-center">
-          <h1 className="text-6xl font-bold text-cyan-50">
-            Usuario no encontrado
-          </h1>
-        </div>
-        <div>
-          <LogOutBtn text={texto} />
-        </div>
-      </div>
-    );
-  }
-
-  if (user.role !== "operario") {
+  // Verificar si el usuario tiene el rol correcto
+  if (rol !== "operario") {
     texto = "Volver para iniciar sesión";
     return (
       <div className="flex flex-col justify-center items-center h-screen bg-gradient-to-bl from-slate-400 to-cyan-800 space-y-20">
@@ -67,17 +47,8 @@ async function IngresoFacturaContainer() {
     );
   }
 
-  // Pasa solo los datos necesarios al client component
-  return (
-    <IngresoFactura
-      user={{
-        id: user.idUsuario.toString(), // Convierte idUsuario a string
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      }}
-    />
-  );
+  // Pasar el rol como una prop a CheckinLlegadas
+  return <IngresoFactura user={userr} />;
 }
 
 export default IngresoFacturaContainer;

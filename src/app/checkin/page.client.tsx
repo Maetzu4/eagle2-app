@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { CheckinForm } from "@/components/Checkin/checkinForm";
 import LogOutBtn from "@/components/Auth/logOutBtn";
-import { useCheckin } from "@/hooks/Checkin/useCheckin";
+import { useFetchData } from "@/hooks/General/useFetchData";
 import { Checkin, user } from "@/types/interfaces";
 import { DataTable } from "@/components/Checkin/dataTableCheckin";
 import { useToast } from "@/hooks/General/use-toast";
@@ -17,7 +17,7 @@ interface CheckinLlegadasProps {
 const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
   const { toast } = useToast();
   const { usuarios, checkin, loading, error, setCheckin, clientes, rutas } =
-    useCheckin(user.email);
+    useFetchData(user.email);
 
   const initialFormData: Checkin = {
     planilla: 0,
