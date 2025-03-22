@@ -147,26 +147,68 @@ export async function PUT(req: Request) {
   }
 }
 
-// Eliminar un check-in
+// Eliminar múltiples check-ins
 export async function DELETE(req: Request) {
   try {
-    const { id } = await req.json();
+    const { ids } = await req.json(); // Obtener los IDs del cuerpo de la solicitud
 
-    // Validar que se envió el ID
-    if (!id) {
-      return NextResponse.json({ error: "ID es requerido" }, { status: 400 });
+    // Validar que se enviaron IDs
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json(
+        { error: "Se requiere una lista de IDs válida" },
+        { status: 400 }
+      );
     }
 
-    // Eliminar el check-in
-    const deletedCheckin = await prisma.checkin.delete({
-      where: { idCheckin: id },
+    // Verificar si los checkins existen y si tienen servicios relacionados
+    const checkins = await prisma.checkin.findMany({
+      where: { idCheckin: { in: ids } },
+      include: { servicio: true },
     });
 
-    return NextResponse.json(deletedCheckin, { status: 200 });
+    // Verificar si alguno de los checkins tiene un servicio relacionado
+    const checkinsConServicio = checkins.filter(
+      (checkin) => checkin.servicio !== null
+    );
+
+    if (checkinsConServicio.length > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "No se pueden eliminar los check-ins porque algunos tienen servicios relacionados",
+          checkinsConServicio: checkinsConServicio.map((c) => c.idCheckin),
+        },
+        { status: 400 }
+      );
+    }
+
+    // Eliminar los check-ins
+    const deletedCheckins = await prisma.checkin.deleteMany({
+      where: { idCheckin: { in: ids } },
+    });
+
+    return NextResponse.json(deletedCheckins, { status: 200 });
   } catch (error) {
-    console.error("Error al eliminar el check-in:", error);
+    console.error("Error al eliminar los check-ins:", error);
+
+    // Manejar errores de integridad referencial
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "P2003"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "No se pueden eliminar los check-ins porque tienen registros relacionados",
+        },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
-      { error: "Error al eliminar el check-in" },
+      { error: "Error al eliminar los check-ins" },
       { status: 500 }
     );
   }

@@ -1,16 +1,18 @@
 "use client";
 import { useState, useEffect } from "react";
 import { CheckinForm } from "@/components/Checkin/checkinForm";
-import { CheckinTable } from "@/components/Checkin/checkinTable";
 import LogOutBtn from "@/components/Auth/logOutBtn";
 import { useCheckin } from "@/components/Checkin/hooks/useCheckin";
 import { Checkin, user, Cliente } from "@/types/checkin";
+import { DataTable } from "@/components/dataTables";
+import { useToast } from "@/components/hooks/use-toast";
 
 interface CheckinLlegadasProps {
   user: user;
 }
 
 const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
+  const { toast } = useToast();
   const texto = "Cerrar sesión";
   const { usuarios, checkin, loading, error, setCheckin, clientes, rutas } =
     useCheckin(user.email);
@@ -87,7 +89,47 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
       !formData.clienteId ||
       !formData.fondoId
     ) {
-      alert("Todos los campos son requeridos");
+      toast({
+        title: "Alerta",
+        description: "Todos los campos son requeridos",
+        variant: "default",
+        className: "bg-yellow-400 border-yellow-300",
+      });
+      return;
+    }
+
+    // Validar que el valor declarado no exceda 9 dígitos
+    if (formData.declarado > 999999999) {
+      toast({
+        title: "Alerta",
+        description: "El valor declarado no puede ser mayor a 999,999,999",
+        variant: "default",
+        className: "bg-yellow-400 border-yellow-300",
+      });
+      return;
+    }
+
+    // Validar que la planilla y el sello no existan en la base de datos
+    const planillaExists = checkin.some(
+      (c) => c.planilla === formData.planilla
+    );
+    const selloExists = checkin.some((c) => c.sello === formData.sello);
+
+    if (planillaExists) {
+      toast({
+        title: "Error",
+        description: "El número de planilla ya existe",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selloExists) {
+      toast({
+        title: "Error",
+        description: "El número de sello ya existe",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -98,7 +140,7 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
 
       const method = formData.idCheckin ? "PUT" : "POST";
       const endpoint = formData.idCheckin
-        ? `/api/checkins/${formData.idCheckin}` // Enviar el ID en la URL
+        ? `/api/checkins/${formData.idCheckin}`
         : "/api/checkins";
 
       const res = await fetch(endpoint, {
@@ -122,7 +164,7 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
         declarado: 0,
         rutaLlegadaId: 0,
         fechaRegistro: new Date(),
-        checkineroId: formData.checkineroId, // Mantener el checkineroId actual
+        checkineroId: formData.checkineroId,
         fondoId: 0,
       });
 
@@ -131,51 +173,84 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
         res.json()
       );
       setCheckin(updatedCheckins);
+
+      // Notificar al usuario que el checkin se ha guardado correctamente
+      toast({
+        title: "Éxito",
+        description: "Checkin guardado correctamente",
+        variant: "default",
+        className: "bg-cyan-700 border-cyan-600 text-white",
+      });
     } catch (error) {
       console.error("Error al enviar el formulario:", error);
+      toast({
+        title: "Error",
+        description: "Hubo un error al guardar el checkin",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleEdit = (checkin: Checkin) => {
+  const handleEdit = (id: number) => {
+    const checkinToEdit = checkin.find((c) => c.idCheckin === id);
+    if (!checkinToEdit) return;
+
     setFormData({
-      idCheckin: checkin.idCheckin,
-      planilla: checkin.planilla,
-      sello: checkin.sello,
-      clienteId: checkin.clienteId,
-      declarado: checkin.declarado,
-      rutaLlegadaId: checkin.rutaLlegadaId,
-      fechaRegistro: new Date(checkin.fechaRegistro),
-      checkineroId: checkin.checkineroId,
-      fondoId: checkin.fondoId,
-      fondo: checkin.fondo,
+      idCheckin: checkinToEdit.idCheckin,
+      planilla: checkinToEdit.planilla,
+      sello: checkinToEdit.sello,
+      clienteId: checkinToEdit.clienteId,
+      declarado: checkinToEdit.declarado,
+      rutaLlegadaId: checkinToEdit.rutaLlegadaId,
+      fechaRegistro: new Date(checkinToEdit.fechaRegistro),
+      checkineroId: checkinToEdit.checkineroId,
+      fondoId: checkinToEdit.fondoId,
+      fondo: checkinToEdit.fondo,
     });
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("¿Estás seguro de que deseas eliminar este check-in?")) {
-      return;
-    }
-
+  const handleDelete = async (ids: number[]) => {
     try {
-      const res = await fetch(`/api/checkins`, {
+      console.log("IDs a eliminar:", ids);
+
+      if (ids.length === 0) {
+        throw new Error("No se seleccionaron check-ins para eliminar");
+      }
+
+      const res = await fetch("/api/checkins", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ ids }),
       });
 
       if (!res.ok) {
-        throw new Error("Error al eliminar el check-in");
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Error al eliminar los check-ins");
       }
 
-      const deletedCheckin = await res.json();
-      console.log("Check-in eliminado:", deletedCheckin);
+      const deletedCheckins = await res.json();
+      console.log("Check-ins eliminados:", deletedCheckins);
 
-      // Actualizar el estado para reflejar los cambios
-      setCheckin((prev: Checkin[]) =>
-        prev.filter((item: Checkin) => item.idCheckin !== id)
+      const updatedCheckins = await fetch("/api/checkins").then((res) =>
+        res.json()
       );
+      setCheckin(updatedCheckins);
+
+      // Notificar al usuario que los checkins se han eliminado correctamente
+      toast({
+        title: "Éxito",
+        description: "Checkins eliminados correctamente",
+        variant: "default",
+        className: "bg-cyan-700 border-cyan-600 text-white",
+      });
     } catch (error) {
-      console.error("Error al eliminar el check-in:", error);
+      console.error("Error al eliminar los check-ins:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Error desconocido",
+        variant: "destructive",
+      });
     }
   };
 
@@ -231,13 +306,10 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
         )}
 
         {/* Tabla de registros */}
-        <CheckinTable
-          checkin={checkin}
-          clientes={clientes}
-          usuarios={usuarios}
-          rol={user.role}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+        <DataTable
+          data={checkin} // Pasar los datos de checkin al DataTable
+          onEdit={handleEdit} // Pasar la función de edición
+          onDelete={handleDelete} // Pasar la función de eliminación
         />
       </main>
     </div>

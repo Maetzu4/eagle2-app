@@ -115,7 +115,7 @@ export function CheckinForm({
           </div>
         </div>
         <div className="flex space-x-4 mt-6">
-          <Button type="submit" className="bg-cyan-700 hover:bg-cyan-900">
+          <Button type="submit" className="bg-cyan-700 hover:bg-cyan-800">
             {isEditMode ? "Actualizar Check-in" : "Agregar Check-in"}
           </Button>
         </div>
