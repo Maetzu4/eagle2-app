@@ -2,11 +2,11 @@
 import { useEffect } from "react";
 import { CheckinForm } from "@/components/Checkin/checkinForm";
 import LogOutBtn from "@/components/Auth/logOutBtn";
-import { useCheckin } from "@/hooks/useCheckin";
+import { useCheckin } from "@/hooks/Checkin/useCheckin";
 import { Checkin, user } from "@/types/checkin";
-import { DataTable } from "@/components/dataTables";
-import { useToast } from "@/hooks/use-toast";
-import { useCheckinForm } from "@/hooks/useCheckinForm";
+import { DataTable } from "@/components/Checkin/dataTableCheckin";
+import { useToast } from "@/hooks/General/use-toast";
+import { useCheckinForm } from "@/hooks/Checkin/useCheckinForm";
 import { Loading } from "@/components/General/loading";
 
 interface CheckinLlegadasProps {

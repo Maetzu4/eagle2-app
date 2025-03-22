@@ -1,6 +1,5 @@
 // app/page.tsx
 "use client";
-
 import { Card } from "@/components/ui/card";
 import { LoginForm } from "@/components/Auth/loginForm";
 import { useAuth } from "@/components/Auth/hooks/useAuth";
