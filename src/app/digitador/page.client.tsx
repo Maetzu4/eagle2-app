@@ -56,70 +56,69 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
     setCheckin,
     toast
   );
-  // Actualizar fechas disponibles cuando cambia el fondo seleccionado
+  // Modifica el useEffect que maneja las fechas disponibles
   useEffect(() => {
-    console.log("--- INICIO DEPURACIÓN ---");
-    console.log("selectedFondoId:", selectedFondoId);
-    console.log("Servicios cargados:", servicios);
-
-    if (selectedFondoId) {
-      // Filtrar servicios activos del fondo seleccionado
-      const serviciosActivos = servicios.filter((s) => {
-        const matchesFondo = s.fondoId === selectedFondoId;
-        const matchesEstado = s.estado === "Activo";
-
-        console.log(`Servicio ID ${s.idServicio}:`, {
-          fondoId: s.fondoId,
-          estado: s.estado,
-          fecha: s.fecharegistro,
-          matchesFondo,
-          matchesEstado,
-        });
-
-        return matchesFondo && matchesEstado;
-      });
-
-      console.log("Servicios activos filtrados:", serviciosActivos);
-
-      // Procesar fechas asegurando formato consistente
-      const fechasUnicas = serviciosActivos
-        .map((s) => {
-          try {
-            // Asegurar que la fecha es un objeto Date válido
-            const fecha =
-              s.fecharegistro instanceof Date
-                ? s.fecharegistro
-                : new Date(s.fecharegistro);
-
-            if (isNaN(fecha.getTime())) {
-              console.error("Fecha inválida:", s.fecharegistro);
-              return null;
-            }
-
-            // Normalizar a fecha sin hora (YYYY-MM-DD)
-            const dateStr = fecha.toISOString().split("T")[0];
-            console.log(`Fecha procesada: ${s.fecharegistro} -> ${dateStr}`);
-            return dateStr;
-          } catch (e) {
-            console.error("Error procesando fecha:", s.fecharegistro, e);
-            return null;
-          }
-        })
-        .filter((fecha): fecha is string => fecha !== null);
-
-      // Eliminar duplicados y ordenar
-      const fechasUnicasOrdenadas = Array.from(new Set(fechasUnicas)).sort(
-        (a, b) => new Date(b).getTime() - new Date(a).getTime()
-      );
-
-      console.log("Fechas únicas encontradas:", fechasUnicasOrdenadas);
-      setAvailableDates(fechasUnicasOrdenadas);
-    } else {
-      console.log("No hay selectedFondoId, limpiando fechas");
+    if (!selectedFondoId) {
       setAvailableDates([]);
       setSelectedDate("");
+      return;
+    }
+
+    try {
+      // 1. Filtrar servicios activos del fondo seleccionado
+      const serviciosActivos = servicios.filter(
+        (s) => s.fondoId === selectedFondoId && s.estado === "Activo"
+      );
+
+      // 2. Procesar fechas con formato detallado
+      const fechasUnicas = serviciosActivos.reduce((acc, servicio) => {
+        if (!servicio.fechaRegistro) {
+          console.warn(
+            "Servicio sin fecha registrada (ID):",
+            servicio.idServicio
+          );
+          return acc;
+        }
+
+        const fecha = new Date(servicio.fechaRegistro);
+        if (isNaN(fecha.getTime())) {
+          console.warn("Fecha inválida en servicio (ID):", servicio.idServicio);
+          return acc;
+        }
+
+        // Formatear fecha completa con hora y planilla
+        const fechaFormateada = `${fecha.toLocaleDateString(
+          "es-ES"
+        )} ${fecha.toLocaleTimeString("es-ES", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })} (Planilla: ${servicio.planilla})`;
+
+        acc.add(fechaFormateada);
+        return acc;
+      }, new Set<string>());
+
+      // 3. Convertir y ordenar por fecha (más reciente primero)
+      const fechasOrdenadas = Array.from(fechasUnicas).sort((a, b) => {
+        // Extraer la parte de fecha para ordenar
+        const fechaA = new Date(a.split(" ")[0].split("/").reverse().join("-"));
+        const fechaB = new Date(b.split(" ")[0].split("/").reverse().join("-"));
+        return fechaB.getTime() - fechaA.getTime();
+      });
+
+      setAvailableDates(fechasOrdenadas);
+
+      console.log("Procesamiento completado:", {
+        serviciosTotales: servicios.length,
+        serviciosActivos: serviciosActivos.length,
+        fechasUnicas: fechasOrdenadas,
+      });
+    } catch (error) {
+      console.error("Error al procesar fechas:", error);
+      setAvailableDates([]);
     }
   }, [selectedFondoId, servicios]);
+
   const handleCerrarFecha = async () => {
     if (!selectedFondoId || !selectedDate) {
       toast({
@@ -132,7 +131,7 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
 
     try {
       const serviciosACerrar = servicios.filter((s) => {
-        const fechaServicio = new Date(s.fecharegistro)
+        const fechaServicio = new Date(s.fechaRegistro)
           .toISOString()
           .split("T")[0];
         return (
@@ -198,7 +197,7 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
     const serviciosCerrados = servicios.filter(
       (s) =>
         s.fondoId === selectedFondoId &&
-        new Date(s.fecharegistro).toISOString().split("T")[0] ===
+        new Date(s.fechaRegistro).toISOString().split("T")[0] ===
           selectedDate &&
         s.estado === "Inactivo"
     );
@@ -356,7 +355,7 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
                       servicios.filter(
                         (s) =>
                           s.fondoId === selectedFondoId &&
-                          new Date(s.fecharegistro)
+                          new Date(s.fechaRegistro)
                             .toISOString()
                             .split("T")[0] === selectedDate &&
                           s.estado === "Activo"

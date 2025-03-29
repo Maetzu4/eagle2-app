@@ -43,7 +43,7 @@ export interface Servicio {
   sello: number;
   estado: "Activo" | "Inactivo";
   diferencia: number;
-  fecharegistro: Date | string;
+  fechaRegistro: Date;
   Sum_B: number;
   B_100000: number;
   B_50000: number;

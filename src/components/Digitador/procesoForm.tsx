@@ -67,7 +67,7 @@ export const ProcesoForm: React.FC<ProcesoFormProps> = ({
             <option value="">Seleccione una fecha</option>
             {availableDates.map((fecha) => (
               <option key={fecha} value={fecha}>
-                {new Date(fecha).toLocaleDateString("es-ES")}
+                {fecha}
               </option>
             ))}
           </select>
