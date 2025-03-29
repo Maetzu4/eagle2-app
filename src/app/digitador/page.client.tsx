@@ -1,6 +1,6 @@
 // @/app/digitador/page.client.tsx
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import LogOutBtn from "@/components/Auth/logOutBtn";
 import { Card } from "@/components/ui/card";
@@ -8,10 +8,10 @@ import { FondosTable } from "@/components/Digitador/fondosTable";
 import { ProcesoForm } from "@/components/Digitador/procesoForm";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { Servicio } from "@/types/interfaces";
 import { useToast } from "@/hooks/General/use-toast";
 import { user } from "@/types/interfaces";
 import { useFetchData } from "@/hooks/General/useFetchData";
+import { Loading } from "@/components/General/loading";
 
 interface DigitadorOpcionesProps {
   user: user;
@@ -19,33 +19,86 @@ interface DigitadorOpcionesProps {
 
 const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
   const { toast } = useToast();
-  const [servicios, setServicios] = useState<Servicio[]>([]);
-  const [isFondo, setIsFondo] = useState<boolean>(false);
-  const [isProceso, setIsProceso] = useState<boolean>(false);
+  const { usuarios, fondos, servicios, loading, error, setServicios } =
+    useFetchData(user.email);
+  const [isFondo, setIsFondo] = useState(false);
+  const [isProceso, setIsProceso] = useState(false);
   const [selectedFondoId, setSelectedFondoId] = useState<number | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { fondos } = useFetchData(user.email);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+
+  // Actualizar fechas disponibles cuando cambia el fondo seleccionado
+  useEffect(() => {
+    console.log("--- INICIO DEPURACIÓN ---");
+    console.log("selectedFondoId:", selectedFondoId);
+    console.log("Servicios cargados:", servicios);
+
+    if (selectedFondoId) {
+      const serviciosActivos = servicios.filter((s) => {
+        console.log(`Servicio ID ${s.idServicio}:`, {
+          fondoId: s.fondoId,
+          estado: s.estado,
+          fecha: s.fecharegistro,
+          matchesFondo: s.fondoId === selectedFondoId,
+          matchesEstado: s.estado === "Activo",
+        });
+        return s.fondoId === selectedFondoId && s.estado === "Activo";
+      });
+
+      console.log("Servicios activos filtrados:", serviciosActivos);
+
+      const fechasUnicas = Array.from(
+        new Set(
+          serviciosActivos
+            .map((s) => {
+              try {
+                const date = new Date(s.fecharegistro);
+                const dateStr = isNaN(date.getTime())
+                  ? null
+                  : date.toISOString().split("T")[0];
+                console.log(
+                  `Procesando fecha: ${s.fecharegistro} -> ${dateStr}`
+                );
+                return dateStr;
+              } catch (e) {
+                console.error("Error procesando fecha:", s.fecharegistro, e);
+                return null;
+              }
+            })
+            .filter((fecha): fecha is string => fecha !== null)
+        )
+      ).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
+      console.log("Fechas únicas encontradas:", fechasUnicas);
+      setAvailableDates(fechasUnicas);
+    } else {
+      console.log("No hay selectedFondoId, limpiando fechas");
+      setAvailableDates([]);
+      setSelectedDate("");
+    }
+  }, [selectedFondoId, servicios]);
 
   const handleCerrarFecha = async () => {
     if (!selectedFondoId || !selectedDate) {
       toast({
         title: "Error",
-        description: "Seleccione un fondo y una fecha",
+        description: "Seleccione un fondo y una fecha válida",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      // Obtener servicios activos para la fecha seleccionada
-      const serviciosACerrar = servicios.filter(
-        (s) =>
+      const serviciosACerrar = servicios.filter((s) => {
+        const fechaServicio = new Date(s.fecharegistro)
+          .toISOString()
+          .split("T")[0];
+        return (
           s.fondoId === selectedFondoId &&
-          new Date(s.fecharegistro).toISOString().split("T")[0] ===
-            selectedDate &&
+          fechaServicio === selectedDate &&
           s.estado === "Activo"
-      );
+        );
+      });
 
       if (serviciosACerrar.length === 0) {
         toast({
@@ -67,10 +120,19 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
         }),
       });
 
-      if (!response.ok) throw new Error("Error en el servidor");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Error al cerrar la fecha");
+      }
 
-      // Actualizar datos
-      await refreshData();
+      // Actualizar estado local
+      setServicios((prevServicios) =>
+        prevServicios.map((s) =>
+          serviciosACerrar.some((sc) => sc.idServicio === s.idServicio)
+            ? { ...s, estado: "Inactivo" as const }
+            : s
+        )
+      );
 
       toast({
         title: "Éxito",
@@ -81,7 +143,8 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
       console.error("Error:", error);
       toast({
         title: "Error",
-        description: "Error al cerrar la fecha",
+        description:
+          error instanceof Error ? error.message : "Error desconocido",
         variant: "destructive",
       });
     }
@@ -112,7 +175,6 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
       fondos.find((f) => f.idFondo === selectedFondoId)?.nombre ||
       "Desconocido";
 
-    // Configuración del documento
     doc.setFontSize(16);
     doc.text(`Reporte de Cierre - ${fondo}`, 14, 15);
     doc.setFontSize(12);
@@ -122,7 +184,6 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
       22
     );
 
-    // Datos de la tabla
     const headers = [["Planilla", "Cliente", "Sede", "Total", "Diferencia"]];
     const data = serviciosCerrados.map((s) => [
       s.planilla.toString(),
@@ -132,41 +193,25 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
       `$${s.diferencia.toLocaleString("es-ES")}`,
     ]);
 
-    // Generar tabla
     autoTable(doc, {
       head: headers,
       body: data,
-      startY: 20,
+      startY: 30,
     });
 
     doc.save(`Cierre_${fondo}_${selectedDate}.pdf`);
   };
 
-  const refreshData = async () => {
-    try {
-      setIsLoading(true);
-      const [serviciosRes] = await Promise.all([fetch("/api/servicio")]);
+  if (loading) {
+    return <Loading text="Cargando datos..." />;
+  }
 
-      const [serviciosData] = await Promise.all([serviciosRes.json()]);
-      setServicios(serviciosData);
-    } catch (error) {
-      console.error("Error cargando datos:", error);
-      toast({
-        title: "Error",
-        description: "Error cargando datos",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (error) {
+    return <Loading text={error} />;
+  }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-bl from-slate-400 to-cyan-800 flex items-center justify-center">
-        <div className="text-white text-6xl font-bold">Cargando datos...</div>
-      </div>
-    );
+  if (!usuarios.length || !fondos.length) {
+    return <Loading text="No se encontraron datos" />;
   }
 
   return (
@@ -174,13 +219,12 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
       <header className="bg-transparent text-white top-0 z-50 p-6">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-4xl font-bold">
-            Bienvenido,{" "}
-            {user.name + "usuarios[0].name + " + " + usuarios[0].lastname"}
+            Bienvenido, {usuarios[0].name} {usuarios[0].lastname}
           </h1>
           <nav>
             <ul className="flex space-x-4">
               <li>
-                <LogOutBtn text={"cerrar sesión"} />
+                <LogOutBtn text={"Cerrar sesión"} />
               </li>
             </ul>
           </nav>
@@ -237,6 +281,7 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
               onFondoChange={(e) => setSelectedFondoId(Number(e.target.value))}
               onDateChange={(date) => setSelectedDate(date)}
               onCerrarFecha={handleCerrarFecha}
+              availableDates={availableDates}
             />
             {selectedDate && (
               <div className="mt-4">
@@ -247,6 +292,21 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
                   Generar PDF para{" "}
                   {new Date(selectedDate).toLocaleDateString("es-ES")}
                 </Button>
+                <div className="mt-4 text-sm text-gray-600">
+                  <p>
+                    Servicios a cerrar:{" "}
+                    {
+                      servicios.filter(
+                        (s) =>
+                          s.fondoId === selectedFondoId &&
+                          new Date(s.fecharegistro)
+                            .toISOString()
+                            .split("T")[0] === selectedDate &&
+                          s.estado === "Activo"
+                      ).length
+                    }
+                  </p>
+                </div>
               </div>
             )}
           </Card>

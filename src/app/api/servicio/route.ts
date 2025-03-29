@@ -101,6 +101,7 @@ export async function GET() {
         clientes: true,
         operarioId: true,
         operario: true,
+        fechaRegistro: true,
       },
     });
     return NextResponse.json(servicios);

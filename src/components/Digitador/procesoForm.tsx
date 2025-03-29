@@ -1,7 +1,7 @@
 // @/components/Digitador/procesoForm.tsx
 import { Button } from "@/components/ui/button";
 import { Fondo } from "@/types/interfaces";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface ProcesoFormProps {
   fondos: Fondo[];
@@ -9,45 +9,20 @@ interface ProcesoFormProps {
   onFondoChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   onDateChange: (date: string) => void;
   onCerrarFecha: () => void;
+  availableDates: string[];
 }
 
-export function ProcesoForm({
+export const ProcesoForm: React.FC<ProcesoFormProps> = ({
   fondos,
   selectedFondoId,
   onFondoChange,
   onDateChange,
   onCerrarFecha,
-}: ProcesoFormProps) {
-  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  availableDates,
+}) => {
   const [selectedDate, setSelectedDate] = useState("");
 
-  // Obtener fechas con servicios activos
-  useEffect(() => {
-    if (selectedFondoId) {
-      const fondoSeleccionado = fondos.find(
-        (f) => f.idFondo === selectedFondoId
-      );
-
-      // Obtener fechas únicas y válidas
-      const dates = Array.from(
-        new Set(
-          fondoSeleccionado?.servicios
-            ?.filter((s) => s.estado === "Activo")
-            ?.map((s) => {
-              const date = new Date(s.fecharegistro);
-              return !isNaN(date.getTime())
-                ? date.toISOString().split("T")[0]
-                : null;
-            })
-            ?.filter((dateStr): dateStr is string => dateStr !== null)
-        )
-      ).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
-
-      setAvailableDates(dates);
-    }
-  }, [selectedFondoId, fondos]);
-
-  const handleDateSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleDateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const date = e.target.value;
     setSelectedDate(date);
     onDateChange(date);
@@ -70,9 +45,9 @@ export function ProcesoForm({
             required
           >
             <option value="">Seleccione un fondo</option>
-            {fondos.map((fond) => (
-              <option key={fond.idFondo} value={fond.idFondo}>
-                {fond.nombre}
+            {fondos.map((fondo) => (
+              <option key={fondo.idFondo} value={fondo.idFondo}>
+                {fondo.nombre}
               </option>
             ))}
           </select>
@@ -84,8 +59,8 @@ export function ProcesoForm({
           </label>
           <select
             value={selectedDate}
-            onChange={handleDateSelection}
-            disabled={!selectedFondoId}
+            onChange={handleDateChange}
+            disabled={!selectedFondoId || availableDates.length === 0}
             className="w-full px-3 py-2 mt-1 border rounded"
             required
           >
@@ -113,23 +88,6 @@ export function ProcesoForm({
           </Button>
         </div>
       </div>
-
-      {selectedDate && (
-        <div className="mt-4 text-sm text-gray-600">
-          <p>
-            Servicios a cerrar:{" "}
-            {
-              fondos
-                .find((f) => f.idFondo === selectedFondoId)
-                ?.servicios?.filter(
-                  (s) =>
-                    new Date(s.fecharegistro).toISOString().split("T")[0] ===
-                      selectedDate && s.estado === "Activo"
-                ).length
-            }
-          </p>
-        </div>
-      )}
     </form>
   );
-}
+};
