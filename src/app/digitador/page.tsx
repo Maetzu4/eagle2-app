@@ -1,12 +1,18 @@
-//app/digitador/page.txs
+//@/app/digitador/page.tsx
 import { auth } from "@/auth";
-import { DigitadorOpciones } from "@/app/digitador/page.client";
+import DigitadorOpciones from "@/app/digitador/page.client";
 import LogOutBtn from "@/components/Auth/logOutBtn";
+import { user } from "@/types/interfaces";
 
-async function DigitadorOpcionesContainer() {
+async function IngresoFacturaContainer() {
   const session = await auth();
   let texto = "";
-
+  const userr: user = {
+    id: session?.user.id || "",
+    name: session?.user.name || "",
+    role: session?.user.role || "",
+    email: session?.user.email || "",
+  };
   if (!session) {
     texto = "Volver para iniciar sesión";
     return (
@@ -41,8 +47,8 @@ async function DigitadorOpcionesContainer() {
     );
   }
 
-  // Pasar el rol como una prop a DigitadorOpciones
-  return <DigitadorOpciones rol={rol} />;
+  // Pasar el rol como una prop a CheckinLlegadas
+  return <DigitadorOpciones user={userr} />;
 }
 
-export default DigitadorOpcionesContainer;
+export default IngresoFacturaContainer;

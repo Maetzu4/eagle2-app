@@ -97,6 +97,10 @@ export async function GET() {
         B_2000: true,
         fondoId: true,
         fondo: true,
+        clienteId: true,
+        clientes: true,
+        operarioId: true,
+        operario: true,
       },
     });
     return NextResponse.json(servicios);

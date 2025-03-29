@@ -61,6 +61,7 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
     checkineroId: 0,
     fondoId: 0,
     operarioId: 0,
+    clienteId: 0,
   });
 
   useEffect(() => {
@@ -120,6 +121,7 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
       checkineroId: 0,
       fondoId: 0,
       operarioId: 0,
+      clienteId: 0,
     });
     setIsDisabled(false); // Habilitar el campo de planilla
     setIsEditing(true); // Cambiar a modo "edición"

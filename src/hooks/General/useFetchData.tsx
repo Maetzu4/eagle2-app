@@ -1,7 +1,13 @@
 //@/hooks/General/useFetchData.tsx
 "use client";
 import { useState, useEffect } from "react";
-import { Checkin, Cliente, Usuario, RutaLlegada } from "@/types/interfaces";
+import {
+  Checkin,
+  Cliente,
+  Usuario,
+  RutaLlegada,
+  Fondo,
+} from "@/types/interfaces";
 
 export function useFetchData(userEmail: string) {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -10,6 +16,7 @@ export function useFetchData(userEmail: string) {
   const [rutas, setRutas] = useState<RutaLlegada[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [fondos, setFondos] = useState<Fondo[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,10 +47,16 @@ export function useFetchData(userEmail: string) {
         if (!checkinsRes.ok) throw new Error("Error al cargar check-ins");
         const checkinsData = await checkinsRes.json();
         setCheckin(checkinsData);
+
+        // Fetch fondo
+        const fondoRes = await fetch("/api/checkins");
+        if (!fondoRes.ok) throw new Error("Error al cargar check-ins");
+        const fondoData = await checkinsRes.json();
+        setFondos(fondoData);
       } catch (err) {
-        console.error("Error al cargar los datos:", err);
-        setError(err instanceof Error ? err.message : "Error desconocido");
-      } finally {
+        setError(
+          err instanceof Error ? err.message : "Error al cargar los datos"
+        );
         setLoading(false);
       }
     };
@@ -60,5 +73,6 @@ export function useFetchData(userEmail: string) {
     error,
     setCheckin,
     setError,
+    fondos,
   };
 }

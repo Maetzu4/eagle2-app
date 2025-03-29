@@ -1,36 +1,63 @@
 // @/components/Digitador/procesoForm.tsx
 import { Button } from "@/components/ui/button";
 import { Fondo } from "@/types/interfaces";
+import { useEffect, useState } from "react";
 
 interface ProcesoFormProps {
   fondos: Fondo[];
   selectedFondoId: number | null;
-  inactiveDates: string[];
   onFondoChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  onDateChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  onCalcular: () => void;
+  onDateChange: (date: string) => void;
+  onCerrarFecha: () => void;
 }
 
 export function ProcesoForm({
   fondos,
   selectedFondoId,
-  inactiveDates,
   onFondoChange,
   onDateChange,
-  onCalcular,
+  onCerrarFecha,
 }: ProcesoFormProps) {
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [selectedDate, setSelectedDate] = useState("");
+
+  // Obtener fechas con servicios activos
+  useEffect(() => {
+    if (selectedFondoId) {
+      const fondoSeleccionado = fondos.find(
+        (f) => f.idFondo === selectedFondoId
+      );
+
+      // Obtener fechas únicas usando Array.from
+      const dates = Array.from(
+        new Set(
+          fondoSeleccionado?.servicios
+            ?.filter((s) => s.estado === "Activo")
+            ?.map((s) => new Date(s.fecharegistro).toISOString().split("T")[0])
+        )
+      ).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
+      setAvailableDates(dates);
+    }
+  }, [selectedFondoId, fondos]);
+
+  const handleDateSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const date = e.target.value;
+    setSelectedDate(date);
+    onDateChange(date);
+  };
+
   return (
     <form onSubmit={(e) => e.preventDefault()}>
       <h2 className="text-2xl font-bold mb-6 text-gray-800">
-        Proceso de Fechas de cierre
+        Proceso de Cierre de Fechas
       </h2>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
           <label className="block text-sm font-medium text-gray-600">
-            Fondo
+            Seleccionar Fondo
           </label>
           <select
-            name="fondos"
             value={selectedFondoId || ""}
             onChange={onFondoChange}
             className="w-full px-3 py-2 mt-1 border rounded"
@@ -39,7 +66,7 @@ export function ProcesoForm({
             <option value="">Seleccione un fondo</option>
             {fondos.map((fond) => (
               <option key={fond.idFondo} value={fond.idFondo}>
-                {fond.idFondo + " " + fond.nombre.replace("_", " ")}
+                {fond.nombre}
               </option>
             ))}
           </select>
@@ -47,33 +74,56 @@ export function ProcesoForm({
 
         <div>
           <label className="block text-sm font-medium text-gray-600">
-            Fechas a cerrar
+            Fechas Disponibles
           </label>
           <select
-            name="fecha"
+            value={selectedDate}
+            onChange={handleDateSelection}
             disabled={!selectedFondoId}
-            onChange={onDateChange}
             className="w-full px-3 py-2 mt-1 border rounded"
             required
           >
             <option value="">Seleccione una fecha</option>
-            {inactiveDates.map((fecha, index) => (
-              <option key={index} value={fecha}>
-                {fecha}
+            {availableDates.map((fecha) => (
+              <option key={fecha} value={fecha}>
+                {new Date(fecha).toLocaleDateString("es-ES")}
               </option>
             ))}
           </select>
         </div>
-        <div>
+
+        <div className="md:col-span-2">
           <Button
             type="button"
-            onClick={onCalcular}
-            className="bg-cyan-700 hover:bg-cyan-900"
+            onClick={onCerrarFecha}
+            disabled={!selectedDate}
+            className="bg-green-600 hover:bg-green-700 w-full"
           >
-            Calcular
+            {selectedDate
+              ? `Cerrar fecha ${new Date(selectedDate).toLocaleDateString(
+                  "es-ES"
+                )}`
+              : "Seleccione una fecha para cerrar"}
           </Button>
         </div>
       </div>
+
+      {selectedDate && (
+        <div className="mt-4 text-sm text-gray-600">
+          <p>
+            Servicios a cerrar:{" "}
+            {
+              fondos
+                .find((f) => f.idFondo === selectedFondoId)
+                ?.servicios?.filter(
+                  (s) =>
+                    new Date(s.fecharegistro).toISOString().split("T")[0] ===
+                      selectedDate && s.estado === "Activo"
+                ).length
+            }
+          </p>
+        </div>
+      )}
     </form>
   );
 }
