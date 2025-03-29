@@ -49,10 +49,10 @@ export function useFetchData(userEmail: string) {
         setCheckin(checkinsData);
 
         // Fetch fondo
-        const fondoRes = await fetch("/api/checkins");
-        if (!fondoRes.ok) throw new Error("Error al cargar check-ins");
-        const fondoData = await checkinsRes.json();
-        setFondos(fondoData);
+        const fondosRes = await fetch("/api/fondos");
+        if (!fondosRes.ok) throw new Error("Error al cargar fondos");
+        const fondosData = await fondosRes.json();
+        setFondos(fondosData);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Error al cargar los datos"

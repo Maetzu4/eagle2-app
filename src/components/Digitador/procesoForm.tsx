@@ -28,12 +28,18 @@ export function ProcesoForm({
         (f) => f.idFondo === selectedFondoId
       );
 
-      // Obtener fechas únicas usando Array.from
+      // Obtener fechas únicas y válidas
       const dates = Array.from(
         new Set(
           fondoSeleccionado?.servicios
             ?.filter((s) => s.estado === "Activo")
-            ?.map((s) => new Date(s.fecharegistro).toISOString().split("T")[0])
+            ?.map((s) => {
+              const date = new Date(s.fecharegistro);
+              return !isNaN(date.getTime())
+                ? date.toISOString().split("T")[0]
+                : null;
+            })
+            ?.filter((dateStr): dateStr is string => dateStr !== null)
         )
       ).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
