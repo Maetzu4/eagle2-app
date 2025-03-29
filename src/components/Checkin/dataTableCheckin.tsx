@@ -12,7 +12,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Card } from "@/components/ui/card";
-import { Checkin } from "@/types/interfaces";
+import { Checkin, user } from "@/types/interfaces";
 import { columns } from "./columnsCheckin";
 import { globalFilterFn } from "./utils";
 import { Pagination } from "@/components/General/pagination";
@@ -25,9 +25,10 @@ interface DataTableProps {
   data: Checkin[];
   onDelete: (ids: number[]) => void;
   onEdit: (id: number) => void;
+  user: user;
 }
 
-export function DataTable({ data, onDelete, onEdit }: DataTableProps) {
+export function DataTable({ data, onDelete, onEdit, user }: DataTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -104,11 +105,13 @@ export function DataTable({ data, onDelete, onEdit }: DataTableProps) {
             {table.getFilteredRowModel().rows.length} fila(s) seleccionadas.
           </div>
           <div className="flex items-center space-x-2">
-            <TableActions
-              onEdit={handleEditSelected}
-              onDelete={handleDeleteSelected}
-              selectedCount={table.getSelectedRowModel().rows.length}
-            />
+            {user.role === "checkinero" && (
+              <TableActions
+                onEdit={handleEditSelected}
+                onDelete={handleDeleteSelected}
+                selectedCount={table.getSelectedRowModel().rows.length}
+              />
+            )}
             <Pagination table={table} />
           </div>
         </div>

@@ -90,7 +90,12 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
           />
         )}
 
-        <DataTable data={checkin} onEdit={handleEdit} onDelete={handleDelete} />
+        <DataTable
+          data={checkin}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          user={user}
+        />
       </main>
     </div>
   );

@@ -9,9 +9,11 @@ import { ProcesoForm } from "@/components/Digitador/procesoForm";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useToast } from "@/hooks/General/use-toast";
-import { user } from "@/types/interfaces";
+import { user, Checkin } from "@/types/interfaces";
 import { useFetchData } from "@/hooks/General/useFetchData";
 import { Loading } from "@/components/General/loading";
+import { DataTable } from "@/components/Checkin/dataTableCheckin";
+import { useCheckinForm } from "@/hooks/Checkin/useCheckinForm";
 
 interface DigitadorOpcionesProps {
   user: user;
@@ -19,14 +21,41 @@ interface DigitadorOpcionesProps {
 
 const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
   const { toast } = useToast();
-  const { usuarios, fondos, servicios, loading, error, setServicios } =
-    useFetchData(user.email);
+  const {
+    usuarios,
+    fondos,
+    servicios,
+    loading,
+    error,
+    setServicios,
+    checkin,
+    clientes,
+    setCheckin,
+  } = useFetchData(user.email);
   const [isFondo, setIsFondo] = useState(false);
   const [isProceso, setIsProceso] = useState(false);
+  const [isCheckin, setIsCheckin] = useState(false);
   const [selectedFondoId, setSelectedFondoId] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState("");
   const [availableDates, setAvailableDates] = useState<string[]>([]);
-
+  const initialFormData: Checkin = {
+    planilla: 0,
+    sello: 0,
+    clienteId: 0,
+    declarado: 0,
+    rutaLlegadaId: 0,
+    fechaRegistro: new Date(),
+    checkineroId: 0,
+    fondoId: 0,
+    fondo: undefined,
+  };
+  const { handleEdit, handleDelete } = useCheckinForm(
+    initialFormData,
+    clientes,
+    checkin,
+    setCheckin,
+    toast
+  );
   // Actualizar fechas disponibles cuando cambia el fondo seleccionado
   useEffect(() => {
     console.log("--- INICIO DEPURACIÓN ---");
@@ -34,50 +63,63 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
     console.log("Servicios cargados:", servicios);
 
     if (selectedFondoId) {
+      // Filtrar servicios activos del fondo seleccionado
       const serviciosActivos = servicios.filter((s) => {
+        const matchesFondo = s.fondoId === selectedFondoId;
+        const matchesEstado = s.estado === "Activo";
+
         console.log(`Servicio ID ${s.idServicio}:`, {
           fondoId: s.fondoId,
           estado: s.estado,
           fecha: s.fecharegistro,
-          matchesFondo: s.fondoId === selectedFondoId,
-          matchesEstado: s.estado === "Activo",
+          matchesFondo,
+          matchesEstado,
         });
-        return s.fondoId === selectedFondoId && s.estado === "Activo";
+
+        return matchesFondo && matchesEstado;
       });
 
       console.log("Servicios activos filtrados:", serviciosActivos);
 
-      const fechasUnicas = Array.from(
-        new Set(
-          serviciosActivos
-            .map((s) => {
-              try {
-                const date = new Date(s.fecharegistro);
-                const dateStr = isNaN(date.getTime())
-                  ? null
-                  : date.toISOString().split("T")[0];
-                console.log(
-                  `Procesando fecha: ${s.fecharegistro} -> ${dateStr}`
-                );
-                return dateStr;
-              } catch (e) {
-                console.error("Error procesando fecha:", s.fecharegistro, e);
-                return null;
-              }
-            })
-            .filter((fecha): fecha is string => fecha !== null)
-        )
-      ).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+      // Procesar fechas asegurando formato consistente
+      const fechasUnicas = serviciosActivos
+        .map((s) => {
+          try {
+            // Asegurar que la fecha es un objeto Date válido
+            const fecha =
+              s.fecharegistro instanceof Date
+                ? s.fecharegistro
+                : new Date(s.fecharegistro);
 
-      console.log("Fechas únicas encontradas:", fechasUnicas);
-      setAvailableDates(fechasUnicas);
+            if (isNaN(fecha.getTime())) {
+              console.error("Fecha inválida:", s.fecharegistro);
+              return null;
+            }
+
+            // Normalizar a fecha sin hora (YYYY-MM-DD)
+            const dateStr = fecha.toISOString().split("T")[0];
+            console.log(`Fecha procesada: ${s.fecharegistro} -> ${dateStr}`);
+            return dateStr;
+          } catch (e) {
+            console.error("Error procesando fecha:", s.fecharegistro, e);
+            return null;
+          }
+        })
+        .filter((fecha): fecha is string => fecha !== null);
+
+      // Eliminar duplicados y ordenar
+      const fechasUnicasOrdenadas = Array.from(new Set(fechasUnicas)).sort(
+        (a, b) => new Date(b).getTime() - new Date(a).getTime()
+      );
+
+      console.log("Fechas únicas encontradas:", fechasUnicasOrdenadas);
+      setAvailableDates(fechasUnicasOrdenadas);
     } else {
       console.log("No hay selectedFondoId, limpiando fechas");
       setAvailableDates([]);
       setSelectedDate("");
     }
   }, [selectedFondoId, servicios]);
-
   const handleCerrarFecha = async () => {
     if (!selectedFondoId || !selectedDate) {
       toast({
@@ -238,7 +280,11 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
           </h2>
           <div className="flex flex-col md:flex-row justify-between gap-4">
             <Button
-              onClick={() => window.open("/checkin", "_blank")}
+              onClick={() => {
+                setIsCheckin(!isCheckin);
+                setIsFondo(false);
+                setIsProceso(false);
+              }}
               className="bg-cyan-700 hover:bg-cyan-900"
             >
               Ver llegadas
@@ -247,6 +293,7 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
               onClick={() => {
                 setIsProceso(false);
                 setIsFondo(!isFondo);
+                setIsCheckin(false);
               }}
               className="bg-cyan-700 hover:bg-cyan-900"
             >
@@ -256,6 +303,7 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
               onClick={() => {
                 setIsFondo(false);
                 setIsProceso(!isProceso);
+                setIsCheckin(false);
               }}
               className="bg-cyan-700 hover:bg-cyan-900"
             >
@@ -263,6 +311,15 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
             </Button>
           </div>
         </Card>
+
+        {isCheckin && (
+          <DataTable
+            data={checkin}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            user={user}
+          />
+        )}
 
         {isFondo && (
           <Card className="bg-white p-6 rounded-lg shadow mt-6">
