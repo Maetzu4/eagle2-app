@@ -12,8 +12,7 @@ import { FondosTable } from "@/components/Digitador/fondosTable";
 import { ProcesoForm } from "@/components/Digitador/procesoForm";
 import { useCheckinForm } from "@/hooks/Checkin/useCheckinForm";
 import { DataTable } from "@/components/Checkin/dataTableCheckin";
-import { ServiciosTable } from "@/components/Digitador/serviciosTable";
-import { columns as serviciosColumns } from "@/components/Digitador/serviciosTable";
+import { ServiciosTable, columns } from "@/components/Digitador/serviciosTable";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { generatePDF } from "@/components/Digitador/pdfGenerator";
@@ -37,7 +36,6 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
   } = useFetchData(user.email);
   const [groupBy, setGroupBy] = useState<"fondo" | "cliente">("fondo");
   const [selectedServices, setSelectedServices] = useState<number[]>([]);
-  const [isFondo, setIsFondo] = useState(false);
   const [isProceso, setIsProceso] = useState(false);
   const [isCheckin, setIsCheckin] = useState(false);
   const [isPdf, setIsPdf] = useState(false);
@@ -150,6 +148,10 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
     }
   };
 
+  const handleFondoSelect = (fondoId: number) => {
+    setSelectedFondoId(fondoId);
+  };
+
   if (loading) {
     return <Loading text="Cargando..." />;
   }
@@ -181,7 +183,7 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
 
       <main className="container mx-auto p-6">
         <Card className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-2xl font-bold mb-6 text-gray-800">
+          <h2 className="text-3xl font-bold mb-6 text-gray-800">
             Gestión de procesos
           </h2>
 
@@ -190,46 +192,42 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
             <Button
               onClick={() => {
                 setIsCheckin(!isCheckin);
-                setIsFondo(false);
                 setIsProceso(false);
                 setIsPdf(false);
+                setSelectedFondoId(null);
               }}
             >
-              {isCheckin ? "Ocultar llegadas" : "Ver llegadas"}
+              {isCheckin ? "Cerrar llegadas" : "Abrir llegadas"}
             </Button>
             <Button
               onClick={() => {
-                setIsProceso(false);
-                setIsFondo(!isFondo);
-                setIsCheckin(false);
-                setIsPdf(false);
-              }}
-            >
-              {isFondo ? "Ocultar fondos" : "Ver Fondos"}
-            </Button>
-            <Button
-              onClick={() => {
-                setIsFondo(false);
                 setIsProceso(!isProceso);
                 setIsCheckin(false);
                 setIsPdf(false);
+                setSelectedFondoId(null);
               }}
             >
-              {isProceso
-                ? "Ocultar proceso cierres"
-                : "Abrir proceso de Cierre"}
+              {isProceso ? "Cerrar proceso cierres" : "Abrir proceso de Cierre"}
             </Button>
             <Button
               onClick={() => {
-                setIsFondo(false);
                 setIsProceso(false);
                 setIsCheckin(false);
                 setIsPdf(!isPdf);
+                setSelectedFondoId(null);
               }}
             >
               {isPdf ? "Cerrar Menu Pdfs" : "Abrir Menu Pdfs"}
             </Button>
           </div>
+        </Card>
+        <Card className="bg-white p-6 rounded-lg shadow mt-6">
+          {!isCheckin && !isPdf && !isProceso && (
+            <h3 className="text-center w-full font-bold text-3xl">
+              {" "}
+              Abra alguna opcion..
+            </h3>
+          )}
 
           {/* Sección de Checkins */}
           {isCheckin && (
@@ -241,47 +239,66 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
             />
           )}
 
-          {/* Sección de Fondos */}
-          {isFondo && <FondosTable data={fondos} />}
           {/* Sección de Proceso de Cierre */}
           {isProceso && (
-            <ProcesoForm
-              fondos={fondos}
-              selectedFondoId={selectedFondoId}
-              onFondoChange={(e) => setSelectedFondoId(Number(e.target.value))}
-              onSelectionChange={setSelectedServiceId}
-              onCerrarFecha={handleCerrarFecha}
-              availableServices={availableServices}
-              selectedServiceId={selectedServiceId}
-            />
+            <div className="space-y-6">
+              <div>
+                <FondosTable
+                  data={fondos}
+                  onSelect={handleFondoSelect}
+                  selectedFondoId={selectedFondoId}
+                  setSelectedServiceId={setSelectedServiceId}
+                  selectedServiceId={selectedServiceId}
+                />
+              </div>
+
+              {selectedFondoId && (
+                <ProcesoForm
+                  fondos={fondos}
+                  selectedFondoId={selectedFondoId}
+                  onFondoChange={(e) =>
+                    setSelectedFondoId(Number(e.target.value))
+                  }
+                  onSelectionChange={setSelectedServiceId}
+                  onCerrarFecha={handleCerrarFecha}
+                  availableServices={availableServices}
+                  selectedServiceId={selectedServiceId}
+                />
+              )}
+            </div>
           )}
 
           {/* Seccion de generar pdfs*/}
           {isPdf && (
             <div className="space-y-4 mt-8">
-              <div className="flex items-center gap-4">
-                <Label>Agrupar por:</Label>
-                <RadioGroup
-                  value={groupBy}
-                  onValueChange={(value) =>
-                    setGroupBy(value as "fondo" | "cliente")
-                  }
-                  className="flex gap-4"
-                >
-                  <div className="flex items-center gap-2">
-                    <RadioGroupItem value="fondo" id="fondo" />
-                    <Label htmlFor="fondo">Fondo</Label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <RadioGroupItem value="cliente" id="cliente" />
-                    <Label htmlFor="cliente">Cliente</Label>
-                  </div>
-                </RadioGroup>
+              <div className="flex justify-between">
+                <h2 className="text-3xl font-bold text-gray-800">
+                  Servicios para Informar
+                </h2>
+                <div className="flex items-center gap-4">
+                  <Label>Agrupar por:</Label>
+                  <RadioGroup
+                    value={groupBy}
+                    onValueChange={(value) =>
+                      setGroupBy(value as "fondo" | "cliente")
+                    }
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="fondo" id="fondo" />
+                      <Label htmlFor="fondo">Fondo</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="cliente" id="cliente" />
+                      <Label htmlFor="cliente">Cliente</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
               </div>
 
               <ServiciosTable
                 data={servicios.filter((s) => s.estado === "Inactivo")}
-                columns={serviciosColumns}
+                columns={columns}
                 onSelectionChange={setSelectedServices}
               />
 

@@ -31,16 +31,14 @@ const meses = [
 ];
 
 export const ProcesoForm: React.FC<ProcesoFormProps> = ({
-  fondos,
   selectedFondoId,
-  onFondoChange,
   onSelectionChange,
   onCerrarFecha,
   availableServices,
   selectedServiceId,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 3;
   const totalPages = Math.ceil(availableServices.length / itemsPerPage);
 
   const formatDate = (dateString: Date) => {
@@ -75,102 +73,78 @@ export const ProcesoForm: React.FC<ProcesoFormProps> = ({
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800">Cierre de Servicios</h2>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <Label className="block text-sm font-medium text-gray-600 mb-2">
-            Seleccionar Fondo
-          </Label>
-          <select
-            value={selectedFondoId || ""}
-            onChange={onFondoChange}
-            className="w-full px-3 py-2 border rounded"
-          >
-            <option value="">Seleccione un fondo</option>
-            {fondos.map((fondo) => (
-              <option key={fondo.idFondo} value={fondo.idFondo}>
-                {fondo.nombre} ({fondo.tipo})
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
       {selectedFondoId && (
         <div className="space-y-4">
-          <div className="border rounded-lg p-4 bg-white shadow-sm">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">
-                Servicios Activos ({availableServices.length})
-              </h3>
-              {totalPages > 1 && (
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handlePreviousPage}
-                    disabled={currentPage === 1}
-                    className="bg-cyan-700 text-white hover:bg-cyan-800"
-                  >
-                    Anterior
-                  </Button>
-                  <span className="text-sm">
-                    Página {currentPage} de {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                    className="bg-cyan-700 text-white hover:bg-cyan-800"
-                  >
-                    Siguiente
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {availableServices.length === 0 ? (
-              <p className="text-gray-500">No hay servicios activos</p>
-            ) : (
-              <RadioGroup
-                value={selectedServiceId?.toString() || ""}
-                onValueChange={(value: string) =>
-                  onSelectionChange(Number(value))
-                }
-                className="space-y-3"
-              >
-                {getPaginatedServices().map((service) => (
-                  <div
-                    key={service.idServicio}
-                    className="flex items-center gap-4 p-3 border rounded hover:bg-gray-50"
-                  >
-                    <RadioGroupItem
-                      value={(service.idServicio || 0).toString()}
-                      id={(service.idServicio || 0).toString()}
-                    />
-                    <div className="flex-1">
-                      <div className="flex justify-between items-center">
-                        <Label htmlFor={(service.idServicio || 0).toString()}>
-                          Planilla: {service.planilla}
-                        </Label>
-                        <span className="text-sm text-gray-500">
-                          {formatDate(service.fechaRegistro)}
-                        </span>
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        Cliente: {service.clientes?.name}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        Monto: ${service.Sum_B?.toLocaleString("es-CO")}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </RadioGroup>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">
+              Servicios Activos ({availableServices.length})
+            </h3>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                  className="bg-cyan-700 text-white hover:bg-cyan-800"
+                >
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="bg-cyan-700 text-white hover:bg-cyan-800"
+                >
+                  Siguiente
+                </Button>
+              </div>
             )}
           </div>
+
+          {availableServices.length === 0 ? (
+            <p className="text-gray-500">No hay servicios activos</p>
+          ) : (
+            <RadioGroup
+              value={selectedServiceId?.toString() || ""}
+              onValueChange={(value: string) =>
+                onSelectionChange(Number(value))
+              }
+              className="space-y-3"
+            >
+              {getPaginatedServices().map((service) => (
+                <div
+                  key={service.idServicio}
+                  className="flex items-center gap-4 p-3 border rounded hover:bg-gray-50"
+                >
+                  <RadioGroupItem
+                    value={(service.idServicio || 0).toString()}
+                    id={(service.idServicio || 0).toString()}
+                  />
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor={(service.idServicio || 0).toString()}>
+                        Planilla: {service.planilla}
+                      </Label>
+                      <span className="text-sm text-gray-500">
+                        {formatDate(service.fechaRegistro)}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Cliente: {service.clientes?.name}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Monto: ${service.Sum_B?.toLocaleString("es-CO")}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </RadioGroup>
+          )}
 
           <Button
             onClick={onCerrarFecha}
@@ -178,11 +152,7 @@ export const ProcesoForm: React.FC<ProcesoFormProps> = ({
             className="w-full py-4 text-lg"
           >
             {selectedServiceId
-              ? `Cerrar servicio ${
-                  availableServices.find(
-                    (s) => s.idServicio === selectedServiceId
-                  )?.planilla
-                }`
+              ? "Cerrar servicio"
               : "Seleccione un servicio para cerrar"}
           </Button>
         </div>

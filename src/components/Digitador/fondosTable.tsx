@@ -16,8 +16,19 @@ import { SearchBar } from "@/components/General/searchBar";
 import { TableHeader } from "@/components/General/tableHeader";
 import { TableBody } from "@/components/General/tableBody";
 import { highlightMatch } from "@/components/Checkin/utils";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export const columns: ColumnDef<Fondo>[] = [
+  {
+    id: "select",
+    header: "Selección",
+    cell: ({ row }) => (
+      <RadioGroupItem
+        value={row.original.idFondo.toString()}
+        id={`fondo-${row.original.idFondo}`}
+      />
+    ),
+  },
   {
     accessorKey: "idFondo",
     header: "Código",
@@ -72,9 +83,18 @@ export const columns: ColumnDef<Fondo>[] = [
 
 interface FondosTableProps {
   data: Fondo[];
+  onSelect: (fondoId: number) => void;
+  selectedFondoId: number | null;
+  setSelectedServiceId: (selectedServiceId: null) => void;
+  selectedServiceId: null | number;
 }
 
-export function FondosTable({ data }: FondosTableProps) {
+export function FondosTable({
+  data,
+  onSelect,
+  selectedFondoId,
+  setSelectedServiceId,
+}: FondosTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [filterValue, setFilterValue] = useState("");
 
@@ -123,16 +143,25 @@ export function FondosTable({ data }: FondosTableProps) {
   return (
     <div>
       <div className="flex items-center justify-between py-4">
-        <h2 className="text-2xl font-bold">Listado de Fondos</h2>
+        <h3 className="text-3xl font-bold">Listado de Fondos</h3>
         <SearchBar onSearch={setFilterValue} />
       </div>
 
-      <div className="rounded-md border">
-        <table className="w-full">
-          <TableHeader table={table} />
-          <TableBody table={table} columns={table.getAllColumns()} />
-        </table>
-      </div>
+      <RadioGroup
+        value={selectedFondoId?.toString() || ""}
+        onValueChange={(value) => {
+          onSelect(Number(value));
+          setSelectedServiceId(null);
+        }}
+        className="space-y-4"
+      >
+        <div className="rounded-md border">
+          <table className="w-full">
+            <TableHeader table={table} />
+            <TableBody table={table} columns={table.getAllColumns()} />
+          </table>
+        </div>
+      </RadioGroup>
 
       <div className="flex justify-end py-4">
         <Pagination table={table} />

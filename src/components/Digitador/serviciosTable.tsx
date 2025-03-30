@@ -188,7 +188,7 @@ export function ServiciosTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-start">
+      <div className="flex justify-end">
         <SearchBar onSearch={setFilterValue} />
       </div>
 

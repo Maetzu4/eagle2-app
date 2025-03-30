@@ -120,15 +120,17 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
       checkin_id: 0,
       checkineroId: 0,
       fondoId: 0,
-      operarioId: 0,
+      operarioId: usuarios[0].idUsuario,
       clienteId: 0,
     });
     setIsDisabled(false); // Habilitar el campo de planilla
     setIsEditing(true); // Cambiar a modo "edición"
     setCheckin(undefined); // Limpiar el checkin
+    setIsDisabled2(false);
   };
 
   const consultar = async () => {
+    resetForm();
     try {
       // Realizar la consulta al servidor
       const response = await fetch(
