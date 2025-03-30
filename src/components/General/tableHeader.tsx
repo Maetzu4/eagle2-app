@@ -16,7 +16,7 @@ export function TableHeader<TData>({ table }: TableHeaderProps<TData>) {
       {table.getHeaderGroups().map((headerGroup) => (
         <TableRow key={headerGroup.id}>
           {headerGroup.headers.map((header) => (
-            <TableHead key={header.id} className="bg-cyan-700 text-white">
+            <TableHead key={header.id}>
               {header.isPlaceholder
                 ? null
                 : flexRender(

@@ -242,15 +242,7 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
           )}
 
           {/* Sección de Fondos */}
-          {isFondo && (
-            <Card className="bg-white p-6 rounded-lg shadow mt-4">
-              <h3 className="text-xl font-bold mb-4 text-gray-800">
-                Listado de Fondos
-              </h3>
-              <FondosTable fondos={fondos} />
-            </Card>
-          )}
-
+          {isFondo && <FondosTable data={fondos} />}
           {/* Sección de Proceso de Cierre */}
           {isProceso && (
             <ProcesoForm
@@ -307,6 +299,7 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
                   });
                 }}
                 disabled={selectedServices.length === 0}
+                className="w-full"
               >
                 Generar PDF ({selectedServices.length} seleccionados)
               </Button>

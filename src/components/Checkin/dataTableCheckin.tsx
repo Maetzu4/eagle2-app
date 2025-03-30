@@ -11,7 +11,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Card } from "@/components/ui/card";
 import { Checkin, user } from "@/types/interfaces";
 import { columns } from "./columnsCheckin";
 import { globalFilterFn } from "./utils";
@@ -73,6 +72,11 @@ export function DataTable({ data, onDelete, onEdit, user }: DataTableProps) {
     onDelete(selectedIds);
   };
 
+  // Configurar paginación inicial a 5 elementos por página
+  React.useEffect(() => {
+    table.setPageSize(5);
+  }, [table]);
+
   const handleEditSelected = () => {
     const selectedId = table.getSelectedRowModel().rows[0].original.idCheckin;
     if (selectedId !== undefined) {
@@ -83,39 +87,37 @@ export function DataTable({ data, onDelete, onEdit, user }: DataTableProps) {
   };
 
   return (
-    <Card className="bg-white p-6 rounded-lg shadow mt-6">
-      <div className="w-full">
-        <div className="flex items-center py-4">
-          <div className="flex justify-between w-full">
-            <h2 className="text-3xl font-bold">Check-ins</h2>
-            <SearchBar onSearch={setFilterValue} />
-          </div>
-        </div>
-
-        <div className="rounded-md border">
-          <table>
-            <TableHeader table={table} />
-            <TableBody table={table} columns={table.getAllColumns()} />
-          </table>
-        </div>
-
-        <div className="flex items-center justify-between py-4">
-          <div className="flex-1 text-sm text-muted-foreground">
-            {table.getFilteredSelectedRowModel().rows.length} de{" "}
-            {table.getFilteredRowModel().rows.length} fila(s) seleccionadas.
-          </div>
-          <div className="flex items-center space-x-2">
-            {user.role === "checkinero" && (
-              <TableActions
-                onEdit={handleEditSelected}
-                onDelete={handleDeleteSelected}
-                selectedCount={table.getSelectedRowModel().rows.length}
-              />
-            )}
-            <Pagination table={table} />
-          </div>
+    <div className="w-full">
+      <div className="flex items-center py-4">
+        <div className="flex justify-between w-full">
+          <h2 className="text-3xl font-bold">Check-ins</h2>
+          <SearchBar onSearch={setFilterValue} />
         </div>
       </div>
-    </Card>
+
+      <div className="rounded-md border">
+        <table>
+          <TableHeader table={table} />
+          <TableBody table={table} columns={table.getAllColumns()} />
+        </table>
+      </div>
+
+      <div className="flex items-center justify-between py-4">
+        <div className="flex-1 text-sm text-muted-foreground">
+          {table.getFilteredSelectedRowModel().rows.length} de{" "}
+          {table.getFilteredRowModel().rows.length} fila(s) seleccionadas.
+        </div>
+        <div className="flex items-center space-x-2">
+          {user.role === "checkinero" && (
+            <TableActions
+              onEdit={handleEditSelected}
+              onDelete={handleDeleteSelected}
+              selectedCount={table.getSelectedRowModel().rows.length}
+            />
+          )}
+          <Pagination table={table} />
+        </div>
+      </div>
+    </div>
   );
 }

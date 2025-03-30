@@ -56,7 +56,7 @@ export const generatePDF = ({
 
   // Contenido del PDF
   Object.entries(groupedServices).forEach(([groupName, services]) => {
-    doc.setFontSize(14);
+    doc.setFontSize(16);
     doc.text(`Grupo: ${groupName}`, margin, yPosition);
     yPosition += 8;
 
@@ -71,7 +71,7 @@ export const generatePDF = ({
 
     let xPosition = margin;
     headers.forEach((header, index) => {
-      doc.setFontSize(12);
+      doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.text(header, xPosition, yPosition);
       xPosition += columnWidths[index];
@@ -95,7 +95,7 @@ export const generatePDF = ({
       ];
 
       row.forEach((text, index) => {
-        doc.setFontSize(10);
+        doc.setFontSize(12);
         doc.text(text, xPosition, yPosition);
         xPosition += columnWidths[index];
       });
@@ -114,7 +114,7 @@ export const generatePDF = ({
 
   // Pie de página
   const footerText = `Generado por Eagle 2 - ${new Date().toLocaleDateString()}`;
-  doc.setFontSize(14);
+  doc.setFontSize(12);
   const pageWidth = doc.internal.pageSize.getWidth();
   const textWidth = doc.getTextWidth(footerText);
   doc.text(footerText, pageWidth - textWidth - margin, 200);
