@@ -56,7 +56,7 @@ export interface Servicio {
   fondoId: number;
   operarioId: number;
   clienteId: number;
-  cliente?: Cliente;
+  clientes?: Cliente;
 }
 
 // Interfaz para el check-in

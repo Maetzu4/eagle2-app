@@ -98,24 +98,14 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
       return;
     }
 
-    if (user.id) {
-      toast({
-        title: "Error",
-        description: "Usuario no autenticado",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       const response = await fetch("/api/fechacierre", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           servicioId: selectedServiceId,
-          digitadorId: user.id,
+          digitadorId: usuarios[0].idUsuario,
           fondoId: selectedFondoId,
-          fechaCierre: new Date().toISOString(),
         }),
       });
 
@@ -196,7 +186,6 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
                 setIsFondo(false);
                 setIsProceso(false);
               }}
-              className="bg-cyan-700 hover:bg-cyan-900"
             >
               {isCheckin ? "Ocultar llegadas" : "Ver llegadas"}
             </Button>
@@ -206,7 +195,6 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
                 setIsFondo(!isFondo);
                 setIsCheckin(false);
               }}
-              className="bg-cyan-700 hover:bg-cyan-900"
             >
               {isFondo ? "Ocultar fondos" : "Ver Fondos"}
             </Button>
@@ -216,7 +204,6 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
                 setIsProceso(!isProceso);
                 setIsCheckin(false);
               }}
-              className="bg-cyan-700 hover:bg-cyan-900"
             >
               {isProceso ? "Ocultar cierres" : "Proceso de Cierre"}
             </Button>

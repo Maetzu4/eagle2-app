@@ -109,7 +109,7 @@ export const ProcesoForm: React.FC<ProcesoFormProps> = ({
                         </span>
                       </div>
                       <div className="text-sm text-gray-600">
-                        Cliente: {service.cliente?.name.replace("_", " ")}
+                        Cliente: {service.clientes?.name}
                       </div>
                       <div className="text-sm text-gray-600">
                         Monto: ${service.Sum_B?.toLocaleString("es-CO")}
