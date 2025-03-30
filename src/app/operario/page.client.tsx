@@ -49,7 +49,7 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
     estado: "Activo",
     observacion: "",
     diferencia: 0,
-    fecharegistro: new Date(),
+    fechaRegistro: new Date(),
     B_100000: 0,
     B_50000: 0,
     B_20000: 0,
@@ -109,7 +109,7 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
       estado: "Activo",
       observacion: "",
       diferencia: 0,
-      fecharegistro: new Date(),
+      fechaRegistro: new Date(),
       B_100000: 0,
       B_50000: 0,
       B_20000: 0,
@@ -266,7 +266,7 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
         fondoId: checkin.fondoId,
         operarioId: formData.operarioId,
         clienteId: checkin.clienteId,
-        fecharegistro: new Date().toISOString(),
+        fechaRegistro: new Date().toISOString(),
       };
 
       console.log("Datos enviados al servidor:", serviceData); // Depuración

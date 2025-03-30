@@ -2,60 +2,37 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// src/app/api/fechacierre/route.ts
 export async function POST(req: Request) {
   try {
-    const { fecha, servicioIds, digitadorId, fondoId } = await req.json();
+    const { servicioId, digitadorId, fondoId, fechaCierre } = await req.json();
 
-    // Validar campos
-    if (!fecha || !servicioIds?.length || !digitadorId || !fondoId) {
+    if (!servicioId || !digitadorId || !fondoId || !fechaCierre) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
     }
 
-    // Convertir la fecha a objeto Date
-    const fechaCierre = new Date(fecha);
-    if (isNaN(fechaCierre.getTime())) {
-      return NextResponse.json({ error: "Fecha inválida" }, { status: 400 });
-    }
-
-    // Verificar que los servicios existen y son del fondo correcto
-    const servicios = await prisma.servicio.findMany({
-      where: {
-        idServicio: { in: servicioIds },
+    // 1. Crear fecha de cierre
+    const fechaCierreRecord = await prisma.fechaCierre.create({
+      data: {
+        fecha_a_cerrar: new Date(fechaCierre),
+        servicioId: servicioId,
+        digitadorId: digitadorId,
         fondoId: fondoId,
-        estado: "Activo",
       },
     });
 
-    if (servicios.length !== servicioIds.length) {
-      return NextResponse.json(
-        { error: "Algunos servicios no existen o no están activos" },
-        { status: 400 }
-      );
-    }
+    // 2. Actualizar servicio a inactivo
+    const servicioActualizado = await prisma.servicio.update({
+      where: { idServicio: servicioId },
+      data: { estado: "Inactivo" },
+    });
 
-    // Crear transacción
-    const result = await prisma.$transaction([
-      // Actualizar servicios
-      prisma.servicio.updateMany({
-        where: { idServicio: { in: servicioIds } },
-        data: { estado: "Inactivo" },
-      }),
-
-      // Crear fechas de cierre
-      ...servicioIds.map((servicioId: number) =>
-        prisma.fechaCierre.create({
-          data: {
-            fecha_a_cerrar: fechaCierre,
-            servicioId: servicioId,
-            digitadorId: digitadorId,
-            fondoId: fondoId,
-          },
-        })
-      ),
-    ]);
-
-    return NextResponse.json(result, { status: 201 });
+    return NextResponse.json(
+      {
+        fechaCierre: fechaCierreRecord,
+        servicio: servicioActualizado,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json(
