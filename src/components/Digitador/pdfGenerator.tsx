@@ -24,10 +24,16 @@ export const generatePDF = ({
   const margin = 10;
   let yPosition = margin + 10;
 
-  // Estilos base
-  doc.setFontSize(16);
-  doc.text("Informe de Servicios Cerrados", margin, yPosition);
-  yPosition += 10;
+  // Título centrado
+  doc.setFontSize(20);
+  doc.setFont("helvetica", "bold");
+  const titleWidth = doc.getTextWidth("Informe de Servicios Cerrados");
+  doc.text(
+    "Informe de Servicios Cerrados",
+    (doc.internal.pageSize.width - titleWidth) / 2,
+    yPosition
+  );
+  yPosition += 15;
 
   // Agrupar servicios
   const groupedServices: { [key: string]: Servicio[] } = {};
@@ -108,7 +114,7 @@ export const generatePDF = ({
 
   // Pie de página
   const footerText = `Generado por Eagle 2 - ${new Date().toLocaleDateString()}`;
-  doc.setFontSize(10);
+  doc.setFontSize(14);
   const pageWidth = doc.internal.pageSize.getWidth();
   const textWidth = doc.getTextWidth(footerText);
   doc.text(footerText, pageWidth - textWidth - margin, 200);
