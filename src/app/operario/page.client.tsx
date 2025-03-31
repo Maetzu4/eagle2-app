@@ -1,11 +1,10 @@
 // @/app/operario/page.client.tsx
 "use client";
 import { useEffect, useState } from "react";
-import LogOutBtn from "@/components/Auth/logOutBtn";
 import { useFetchData } from "@/hooks/General/useFetchData";
 import { Checkin, Servicio, user } from "@/types/interfaces";
 import { useToast } from "@/hooks/General/use-toast";
-import { Loading } from "@/components/General/loading";
+import { Informa } from "@/components/General/informa";
 import { Minus, Plus } from "lucide-react";
 import {
   Table,
@@ -32,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DataTable } from "@/components/Checkin/dataTableCheckin";
 import { useCheckinForm } from "@/hooks/Checkin/useCheckinForm";
+import { TopPage } from "@/components/General/topPage";
 
 interface IngresoFacturaProps {
   user: user;
@@ -324,30 +324,16 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
   };
 
   if (loading) {
-    return <Loading text="Cargando..." />;
+    return <Informa text="Cargando" btntxt="N/A" log={false} />;
   }
 
   if (error) {
-    return <Loading text={error} />;
+    return <Informa text={error} btntxt="cerrar sesion" log={true} />;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-bl from-slate-400 to-cyan-800">
-      <header className="bg-transparent text-white top-0 z-50 p-6">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-4xl font-bold">
-            Bienvenido, {usuarios[0].name + " " + usuarios[0].lastname}
-          </h1>
-          <nav>
-            <ul className="flex space-x-4">
-              <li>
-                <LogOutBtn text={"Cerrar sesión"} />
-              </li>
-            </ul>
-          </nav>
-        </div>
-      </header>
-
+      <TopPage user={usuarios[0]} />
       <main className="container mx-auto p-6">
         <div>
           <form onSubmit={handleSubmit}>

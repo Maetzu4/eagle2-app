@@ -2,6 +2,18 @@
 import { Row } from "@tanstack/react-table";
 import { Checkin, Usuario, Cliente, Fondo } from "@/types/interfaces";
 
+export const initialFormData: Checkin = {
+  planilla: 0,
+  sello: 0,
+  clienteId: 0,
+  declarado: 0,
+  rutaLlegadaId: 0,
+  fechaRegistro: new Date(),
+  checkineroId: 0,
+  fondoId: 0,
+  fondo: undefined,
+};
+
 // Función de filtrado global
 export const globalFilterFn = (
   row: Row<Checkin>,

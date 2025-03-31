@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { Informa } from "@/components/General/informa";
 
 export default function Logout() {
   const router = useRouter();
@@ -18,11 +19,5 @@ export default function Logout() {
     handleLogOut();
   }, [router]);
 
-  return (
-    <div className="flex items-center justify-center h-screen bg-gradient-to-bl from-slate-400 to-cyan-800 gap-60">
-      <h1 className="text-6xl font-bold text-center text-cyan-50">
-        Cerrando sesión...
-      </h1>
-    </div>
-  );
+  return <Informa text="Cerrando sesion..." btntxt="nope" log={false} />;
 }
