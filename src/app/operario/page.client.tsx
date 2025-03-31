@@ -30,6 +30,8 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import { DataTable } from "@/components/Checkin/dataTableCheckin";
+import { useCheckinForm } from "@/hooks/Checkin/useCheckinForm";
 
 interface IngresoFacturaProps {
   user: user;
@@ -37,8 +39,26 @@ interface IngresoFacturaProps {
 
 const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
   const { toast } = useToast();
-  const { usuarios, loading, error } = useFetchData(user.email);
-  const [checkin, setCheckin] = useState<Checkin>();
+  const { usuarios, loading, error, checkin, clientes, setCheckin } =
+    useFetchData(user.email);
+  const [checki, setChecki] = useState<Checkin>();
+  const initialFormData: Checkin = {
+    planilla: 0,
+    sello: 0,
+    clienteId: 0,
+    declarado: 0,
+    rutaLlegadaId: 0,
+    fechaRegistro: new Date(),
+    checkineroId: 0,
+    fondoId: 0,
+  };
+  const { handleEdit, handleDelete } = useCheckinForm(
+    initialFormData,
+    clientes,
+    checkin,
+    setCheckin,
+    toast
+  );
   const [isDisabled, setIsDisabled] = useState(false);
   const [isDisabled2, setIsDisabled2] = useState(false);
   const [isEditing, setIsEditing] = useState(true);
@@ -75,7 +95,7 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
   }, [usuarios, setFormData]);
 
   useEffect(() => {
-    if (checkin && checkin.declarado) {
+    if (checki && checki.declarado) {
       const newSum_B =
         formData.B_100000 * 100000 +
         formData.B_50000 * 50000 +
@@ -84,7 +104,7 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
         formData.B_5000 * 5000 +
         formData.B_2000 * 2000;
 
-      const diferencia = newSum_B - checkin.declarado;
+      const diferencia = newSum_B - checki.declarado;
 
       setFormData((prev) => ({
         ...prev,
@@ -99,7 +119,7 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
     formData.B_10000,
     formData.B_5000,
     formData.B_2000,
-    checkin,
+    checki,
   ]);
 
   const resetForm = () => {
@@ -125,8 +145,7 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
     });
     setIsDisabled(false); // Habilitar el campo de planilla
     setIsEditing(true); // Cambiar a modo "edición"
-    setCheckin(undefined); // Limpiar el checkin
-    setIsDisabled2(false);
+    setChecki(undefined); // Limpiar el checkin
   };
 
   const consultar = async () => {
@@ -142,7 +161,7 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
 
       // Obtener los datos del checkin
       const data = await response.json();
-      setCheckin(data); // Guardar el checkin en el estado
+      setChecki(data); // Guardar el checkin en el estado
 
       // Actualizar el formulario con los datos del checkin
       setFormData((prev) => ({
@@ -161,25 +180,14 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
           ...prev,
           ...data.servicio, // Asignar los datos del servicio
         }));
-        setIsDisabled2(data.servicio.estado === "Inactivo"); // Deshabilitar si el servicio está inactivo
+        if (data.servicio.Sum_B > 0) {
+          setIsDisabled2(true);
+        } // Deshabilitar si el servicio ha sido creado
       }
 
       // Deshabilitar el campo de planilla después de consultar
       setIsDisabled(true);
       setIsEditing(false);
-
-      // Depuración
-      console.log("Datos del checkin:", data);
-      console.log("Datos del servicio:", data.servicio);
-      console.log("Formulario actualizado:", {
-        ...formData,
-        planilla: data.planilla,
-        sello: data.sello,
-        checkin_id: data.idCheckin,
-        checkineroId: data.checkineroId,
-        fondoId: data.fondoId,
-        clienteId: data.clienteId,
-      });
     } catch (error) {
       // Mostrar mensaje de error
       toast({
@@ -192,6 +200,7 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
   const habilitarEdicion = () => {
     setIsDisabled(false);
     setIsEditing(true);
+    setIsDisabled2(false);
   };
 
   const handleIncrement = (
@@ -243,7 +252,7 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
 
   const handleSubmit = async () => {
     try {
-      if (!checkin) {
+      if (!checki) {
         throw new Error(
           "Debes consultar una planilla válida antes de guardar."
         );
@@ -263,11 +272,11 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
         B_2000: formData.B_2000,
         Sum_B: formData.Sum_B,
         diferencia: formData.diferencia,
-        checkin_id: checkin.idCheckin,
-        checkineroId: checkin.checkineroId,
-        fondoId: checkin.fondoId,
+        checkin_id: checki.idCheckin,
+        checkineroId: checki.checkineroId,
+        fondoId: checki.fondoId,
         operarioId: formData.operarioId,
-        clienteId: checkin.clienteId,
+        clienteId: checki.clienteId,
         fechaRegistro: new Date().toISOString(),
       };
 
@@ -340,363 +349,382 @@ const IngresoFactura: React.FC<IngresoFacturaProps> = ({ user }) => {
       </header>
 
       <main className="container mx-auto p-6">
-        <Card className="bg-white p-6 rounded-lg shadow">
+        <div>
           <form onSubmit={handleSubmit}>
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">
-              Factura de detallado de cliente
-            </h2>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mb-8">
-              <div className="items-center gap-4">
-                <div className="flex-1">
+            <Card className="bg-white p-6 rounded-lg shadow">
+              <h2 className="text-2xl font-bold mb-6 text-gray-800">
+                Factura de detallado de cliente
+              </h2>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mb-8">
+                <div className="items-center gap-4">
+                  <div className="flex-1">
+                    <label
+                      htmlFor="planilla"
+                      className="block text-sm font-medium text-gray-600"
+                    >
+                      Número de Planilla:
+                    </label>
+                  </div>
+                  <div className="flex gap-4">
+                    <input
+                      type="number"
+                      id="planilla"
+                      name="planilla"
+                      className="border p-2 w-full"
+                      value={formData.planilla}
+                      onChange={handleInputChange}
+                      disabled={isDisabled}
+                    />
+                    <Button
+                      type="button"
+                      onClick={isEditing ? consultar : habilitarEdicion}
+                      className="bg-cyan-700 hover:bg-cyan-900"
+                    >
+                      {isEditing ? "Consultar" : "Editar"}
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
                   <label
-                    htmlFor="planilla"
+                    htmlFor="nombreCliente"
                     className="block text-sm font-medium text-gray-600"
                   >
-                    Número de Planilla:
+                    Nombre del Cliente:
                   </label>
-                </div>
-                <div className="flex gap-4">
                   <input
-                    type="number"
-                    id="planilla"
-                    name="planilla"
+                    disabled
+                    type="text"
+                    id="name"
+                    name="name"
                     className="border p-2 w-full"
-                    value={formData.planilla}
-                    onChange={handleInputChange}
-                    disabled={isDisabled}
+                    value={checki?.clientes?.name?.replace("_", " ") || ""}
+                    readOnly
                   />
-                  <Button
-                    type="button"
-                    onClick={isEditing ? consultar : habilitarEdicion}
-                    className="bg-cyan-700 hover:bg-cyan-900"
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="sello"
+                    className="block text-sm font-medium text-gray-600"
                   >
-                    {isEditing ? "Consultar" : "Editar"}
+                    Sello de la Factura:
+                  </label>
+                  <input
+                    disabled
+                    type="text"
+                    id="sello"
+                    name="sello"
+                    className="border p-2 w-full"
+                    value={checki?.sello || ""}
+                    readOnly
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="valorDeclarado"
+                    className="block text-sm font-medium text-gray-600"
+                  >
+                    Valor Declarado:
+                  </label>
+                  <input
+                    disabled
+                    type="number"
+                    id="valorDeclarado"
+                    name="valorDeclarado"
+                    className="border p-2 w-full"
+                    value={checki?.declarado || ""}
+                    readOnly
+                  />
+                </div>
+              </div>
+            </Card>
+            {!isEditing && (
+              <Card className="bg-white p-6 rounded-lg shadow mt-6">
+                {/* Tabla de billetes */}
+                <Table className="w-full mt-4 border border-gray-300">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="px-4 py-2 text-left">
+                        Denominación
+                      </TableHead>
+                      <TableHead className="px-4 py-2 text-left">
+                        Cantidad
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {/* Billete de 100,000 */}
+                    <TableRow>
+                      <TableCell className="px-4 py-2">$100,000</TableCell>
+                      <TableCell className="flex items-center gap-2 px-4 py-2">
+                        <Button
+                          disabled={isDisabled2}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDecrement("B_100000")}
+                        >
+                          <Minus />
+                        </Button>
+                        <input
+                          disabled={isDisabled2}
+                          type="number"
+                          name="B_100000"
+                          className="border p-1 w-16 text-center"
+                          value={formData.B_100000}
+                          onChange={handleInputChange}
+                        />
+                        <Button
+                          disabled={isDisabled2}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleIncrement("B_100000")}
+                        >
+                          <Plus />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    {/* Billete de 50,000 */}
+                    <TableRow>
+                      <TableCell className="px-4 py-2">$50,000</TableCell>
+                      <TableCell className="flex items-center gap-2 px-4 py-2">
+                        <Button
+                          disabled={isDisabled2}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDecrement("B_50000")}
+                        >
+                          <Minus />
+                        </Button>
+                        <input
+                          disabled={isDisabled2}
+                          type="number"
+                          name="B_50000"
+                          className="border p-1 w-16 text-center"
+                          value={checki?.servicio?.B_50000 || formData.B_50000}
+                          onChange={handleInputChange}
+                        />
+                        <Button
+                          disabled={isDisabled2}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleIncrement("B_50000")}
+                        >
+                          <Plus />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    {/* Billete de 20,000 */}
+                    <TableRow>
+                      <TableCell className="px-4 py-2">$20,000</TableCell>
+                      <TableCell className="flex items-center gap-2 px-4 py-2">
+                        <Button
+                          disabled={isDisabled2}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDecrement("B_20000")}
+                        >
+                          <Minus />
+                        </Button>
+                        <input
+                          disabled={isDisabled2}
+                          type="number"
+                          name="B_20000"
+                          className="border p-1 w-16 text-center"
+                          value={checki?.servicio?.B_20000 || formData.B_20000}
+                          onChange={handleInputChange}
+                        />
+                        <Button
+                          disabled={isDisabled2}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleIncrement("B_20000")}
+                        >
+                          <Plus />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    {/* Billete de 10,000 */}
+                    <TableRow>
+                      <TableCell className="px-4 py-2">$10,000</TableCell>
+                      <TableCell className="flex items-center gap-2 px-4 py-2">
+                        <Button
+                          disabled={isDisabled2}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDecrement("B_10000")}
+                        >
+                          <Minus />
+                        </Button>
+                        <input
+                          disabled={isDisabled2}
+                          type="number"
+                          name="B_10000"
+                          className="border p-1 w-16 text-center"
+                          value={checki?.servicio?.B_10000 || formData.B_10000}
+                          onChange={handleInputChange}
+                        />
+                        <Button
+                          disabled={isDisabled2}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleIncrement("B_10000")}
+                        >
+                          <Plus />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    {/* Billete de 5,000 */}
+                    <TableRow>
+                      <TableCell className="px-4 py-2">$5,000</TableCell>
+                      <TableCell className="flex items-center gap-2 px-4 py-2">
+                        <Button
+                          disabled={isDisabled2}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDecrement("B_5000")}
+                        >
+                          <Minus />
+                        </Button>
+                        <input
+                          disabled={isDisabled2}
+                          type="number"
+                          name="B_5000"
+                          className="border p-1 w-16 text-center"
+                          value={checki?.servicio?.B_5000 || formData.B_5000}
+                          onChange={handleInputChange}
+                        />
+                        <Button
+                          disabled={isDisabled2}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleIncrement("B_5000")}
+                        >
+                          <Plus />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    {/* Billete de 2,000 */}
+                    <TableRow>
+                      <TableCell className="px-4 py-2">$2,000</TableCell>
+                      <TableCell className="flex items-center gap-2 px-4 py-2">
+                        <Button
+                          disabled={isDisabled2}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDecrement("B_2000")}
+                        >
+                          <Minus />
+                        </Button>
+                        <input
+                          disabled={isDisabled2}
+                          type="number"
+                          name="B_2000"
+                          className="border p-1 w-16 text-center"
+                          value={checki?.servicio?.B_2000 || formData.B_2000}
+                          onChange={handleInputChange}
+                        />
+                        <Button
+                          disabled={isDisabled2}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleIncrement("B_2000")}
+                        >
+                          <Plus />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    {/* Fila para el total */}
+                    <TableRow>
+                      <TableCell className="px-4 py-2 font-bold">
+                        Total
+                      </TableCell>
+                      <TableCell className="px-4 py-2">
+                        <input
+                          disabled={isDisabled2}
+                          type="text"
+                          value={checki?.servicio?.Sum_B || formData.Sum_B}
+                          readOnly
+                          className="border p-1 w-full text-center"
+                        />
+                      </TableCell>
+                    </TableRow>
+                    {/* Fila para la diferencia */}
+                    <TableRow>
+                      <TableCell className="px-4 py-2 font-bold">
+                        Diferencia
+                      </TableCell>
+                      <TableCell className="px-4 py-2">
+                        <input
+                          disabled={isDisabled2}
+                          type="text"
+                          value={
+                            checki?.servicio?.diferencia ||
+                            formData.diferencia ||
+                            0
+                          }
+                          readOnly
+                          className="border p-1 w-full text-center"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+
+                {/* Observación */}
+                <div className="mt-6">
+                  <label htmlFor="observacion" className="block font-bold mb-2">
+                    Observación:
+                  </label>
+                  <Textarea
+                    disabled={isDisabled2}
+                    id="observacion"
+                    name="observacion"
+                    className="border p-2 w-full"
+                    value={
+                      checki?.servicio?.observacion || formData.observacion
+                    }
+                    onChange={handleTextChange}
+                  />
+                </div>
+
+                <div className="flex justify-center space-x-4 mt-6">
+                  <Button
+                    disabled={isDisabled2}
+                    type="button"
+                    className="bg-cyan-700 hover:bg-cyan-900"
+                    onClick={handleConfirmSubmit} // Llamar a handleConfirmSubmit
+                  >
+                    Guardar y cerrar
                   </Button>
                 </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="nombreCliente"
-                  className="block text-sm font-medium text-gray-600"
-                >
-                  Nombre del Cliente:
-                </label>
-                <input
-                  disabled
-                  type="text"
-                  id="name"
-                  name="name"
-                  className="border p-2 w-full"
-                  value={checkin?.clientes?.name?.replace("_", " ") || ""}
-                  readOnly
+              </Card>
+            )}
+            {isEditing && (
+              <Card className="bg-white p-6 rounded-lg shadow mt-6">
+                <DataTable
+                  data={checkin}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  user={user}
                 />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="sello"
-                  className="block text-sm font-medium text-gray-600"
-                >
-                  Sello de la Factura:
-                </label>
-                <input
-                  disabled
-                  type="text"
-                  id="sello"
-                  name="sello"
-                  className="border p-2 w-full"
-                  value={checkin?.sello || ""}
-                  readOnly
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="valorDeclarado"
-                  className="block text-sm font-medium text-gray-600"
-                >
-                  Valor Declarado:
-                </label>
-                <input
-                  disabled
-                  type="number"
-                  id="valorDeclarado"
-                  name="valorDeclarado"
-                  className="border p-2 w-full"
-                  value={checkin?.declarado || ""}
-                  readOnly
-                />
-              </div>
-            </div>
-
-            {/* Tabla de billetes */}
-            <Table className="w-full mt-4 border border-gray-300">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="px-4 py-2 text-left">
-                    Denominación
-                  </TableHead>
-                  <TableHead className="px-4 py-2 text-left">
-                    Cantidad
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {/* Billete de 100,000 */}
-                <TableRow>
-                  <TableCell className="px-4 py-2">$100,000</TableCell>
-                  <TableCell className="flex items-center gap-2 px-4 py-2">
-                    <Button
-                      disabled={isDisabled2}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDecrement("B_100000")}
-                    >
-                      <Minus />
-                    </Button>
-                    <input
-                      disabled={isDisabled2}
-                      type="number"
-                      name="B_100000"
-                      className="border p-1 w-16 text-center"
-                      value={formData.B_100000}
-                      onChange={handleInputChange}
-                    />
-                    <Button
-                      disabled={isDisabled2}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleIncrement("B_100000")}
-                    >
-                      <Plus />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-                {/* Billete de 50,000 */}
-                <TableRow>
-                  <TableCell className="px-4 py-2">$50,000</TableCell>
-                  <TableCell className="flex items-center gap-2 px-4 py-2">
-                    <Button
-                      disabled={isDisabled2}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDecrement("B_50000")}
-                    >
-                      <Minus />
-                    </Button>
-                    <input
-                      disabled={isDisabled2}
-                      type="number"
-                      name="B_50000"
-                      className="border p-1 w-16 text-center"
-                      value={checkin?.servicio?.B_50000 || formData.B_50000}
-                      onChange={handleInputChange}
-                    />
-                    <Button
-                      disabled={isDisabled2}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleIncrement("B_50000")}
-                    >
-                      <Plus />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-                {/* Billete de 20,000 */}
-                <TableRow>
-                  <TableCell className="px-4 py-2">$20,000</TableCell>
-                  <TableCell className="flex items-center gap-2 px-4 py-2">
-                    <Button
-                      disabled={isDisabled2}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDecrement("B_20000")}
-                    >
-                      <Minus />
-                    </Button>
-                    <input
-                      disabled={isDisabled2}
-                      type="number"
-                      name="B_20000"
-                      className="border p-1 w-16 text-center"
-                      value={checkin?.servicio?.B_20000 || formData.B_20000}
-                      onChange={handleInputChange}
-                    />
-                    <Button
-                      disabled={isDisabled2}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleIncrement("B_20000")}
-                    >
-                      <Plus />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-                {/* Billete de 10,000 */}
-                <TableRow>
-                  <TableCell className="px-4 py-2">$10,000</TableCell>
-                  <TableCell className="flex items-center gap-2 px-4 py-2">
-                    <Button
-                      disabled={isDisabled2}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDecrement("B_10000")}
-                    >
-                      <Minus />
-                    </Button>
-                    <input
-                      disabled={isDisabled2}
-                      type="number"
-                      name="B_10000"
-                      className="border p-1 w-16 text-center"
-                      value={checkin?.servicio?.B_10000 || formData.B_10000}
-                      onChange={handleInputChange}
-                    />
-                    <Button
-                      disabled={isDisabled2}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleIncrement("B_10000")}
-                    >
-                      <Plus />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-                {/* Billete de 5,000 */}
-                <TableRow>
-                  <TableCell className="px-4 py-2">$5,000</TableCell>
-                  <TableCell className="flex items-center gap-2 px-4 py-2">
-                    <Button
-                      disabled={isDisabled2}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDecrement("B_5000")}
-                    >
-                      <Minus />
-                    </Button>
-                    <input
-                      disabled={isDisabled2}
-                      type="number"
-                      name="B_5000"
-                      className="border p-1 w-16 text-center"
-                      value={checkin?.servicio?.B_5000 || formData.B_5000}
-                      onChange={handleInputChange}
-                    />
-                    <Button
-                      disabled={isDisabled2}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleIncrement("B_5000")}
-                    >
-                      <Plus />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-                {/* Billete de 2,000 */}
-                <TableRow>
-                  <TableCell className="px-4 py-2">$2,000</TableCell>
-                  <TableCell className="flex items-center gap-2 px-4 py-2">
-                    <Button
-                      disabled={isDisabled2}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDecrement("B_2000")}
-                    >
-                      <Minus />
-                    </Button>
-                    <input
-                      disabled={isDisabled2}
-                      type="number"
-                      name="B_2000"
-                      className="border p-1 w-16 text-center"
-                      value={checkin?.servicio?.B_2000 || formData.B_2000}
-                      onChange={handleInputChange}
-                    />
-                    <Button
-                      disabled={isDisabled2}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleIncrement("B_2000")}
-                    >
-                      <Plus />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-                {/* Fila para el total */}
-                <TableRow>
-                  <TableCell className="px-4 py-2 font-bold">Total</TableCell>
-                  <TableCell className="px-4 py-2">
-                    <input
-                      disabled={isDisabled2}
-                      type="text"
-                      value={checkin?.servicio?.Sum_B || formData.Sum_B}
-                      readOnly
-                      className="border p-1 w-full text-center"
-                    />
-                  </TableCell>
-                </TableRow>
-                {/* Fila para la diferencia */}
-                <TableRow>
-                  <TableCell className="px-4 py-2 font-bold">
-                    Diferencia
-                  </TableCell>
-                  <TableCell className="px-4 py-2">
-                    <input
-                      disabled={isDisabled2}
-                      type="text"
-                      value={
-                        checkin?.servicio?.diferencia ||
-                        formData.diferencia ||
-                        0
-                      }
-                      readOnly
-                      className="border p-1 w-full text-center"
-                    />
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-
-            {/* Observación */}
-            <div className="mt-6">
-              <label htmlFor="observacion" className="block font-bold mb-2">
-                Observación:
-              </label>
-              <Textarea
-                disabled={isDisabled2}
-                id="observacion"
-                name="observacion"
-                className="border p-2 w-full"
-                value={checkin?.servicio?.observacion || formData.observacion}
-                onChange={handleTextChange}
-              />
-            </div>
-
-            <div className="flex justify-center space-x-4 mt-6">
-              <Button
-                disabled={isDisabled2}
-                type="button" // Cambiar a type="button" para evitar el envío automático del formulario
-                className="bg-cyan-700 hover:bg-cyan-900"
-                onClick={handleConfirmSubmit} // Llamar a handleConfirmSubmit
-              >
-                Guardar y cerrar
-              </Button>
-            </div>
+              </Card>
+            )}
           </form>
-        </Card>
+        </div>
       </main>
       <AlertDialog
         open={isConfirmDialogOpen}

@@ -11,6 +11,7 @@ export function Pagination<TData>({ table }: PaginationProps<TData>) {
     <div className="flex items-center space-x-2">
       <Button
         variant="outline"
+        type="button"
         size="sm"
         onClick={() => table.previousPage()}
         disabled={!table.getCanPreviousPage()}
@@ -19,6 +20,7 @@ export function Pagination<TData>({ table }: PaginationProps<TData>) {
         Anterior
       </Button>
       <Button
+        type="button"
         variant="outline"
         size="sm"
         onClick={() => table.nextPage()}

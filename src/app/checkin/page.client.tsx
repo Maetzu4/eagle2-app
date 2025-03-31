@@ -9,6 +9,7 @@ import { DataTable } from "@/components/Checkin/dataTableCheckin";
 import { useToast } from "@/hooks/General/use-toast";
 import { useCheckinForm } from "@/hooks/Checkin/useCheckinForm";
 import { Loading } from "@/components/General/loading";
+import { Card } from "@/components/ui/card";
 
 interface CheckinLlegadasProps {
   user: user;
@@ -90,12 +91,14 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
           />
         )}
 
-        <DataTable
-          data={checkin}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          user={user}
-        />
+        <Card className="bg-white p-6 rounded-lg shadow mt-6">
+          <DataTable
+            data={checkin}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            user={user}
+          />
+        </Card>
       </main>
     </div>
   );
