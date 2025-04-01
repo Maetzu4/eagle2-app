@@ -1,5 +1,4 @@
 //@/app/not-found.tsx
-
 import { Informa } from "@/components/General/informa";
 
 export default function NotFound() {

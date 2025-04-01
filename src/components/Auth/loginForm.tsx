@@ -87,7 +87,7 @@ export function LoginForm({ onSuccess, onError }: LoginFormProps) {
         <Button
           disabled={isPending}
           type="submit"
-          className="w-full px-4 py-2 font-bold bg-cyan-700 hover:bg-cyan-900"
+          className="w-full px-4 py-2 font-bold"
         >
           Entrar
         </Button>

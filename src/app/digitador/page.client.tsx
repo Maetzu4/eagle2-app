@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/General/use-toast";
-import { user, Checkin, Servicio } from "@/types/interfaces";
+import { user, Servicio } from "@/types/interfaces";
 import { useFetchData } from "@/hooks/General/useFetchData";
 import { Informa } from "@/components/General/informa";
 import { FondosTable } from "@/components/Digitador/fondosTable";
@@ -16,11 +16,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { generatePDF } from "@/components/Digitador/pdfGenerator";
 import { TopPage } from "@/components/General/topPage";
+import { initialFormData } from "@/components/Checkin/utils";
 
 interface DigitadorOpcionesProps {
   user: user;
 }
-
 const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
   const { toast } = useToast();
   const {
@@ -44,19 +44,6 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
     null
   );
   const [availableServices, setAvailableServices] = useState<Servicio[]>([]);
-
-  // Configuración inicial para el formulario de checkin
-  const initialFormData: Checkin = {
-    planilla: 0,
-    sello: 0,
-    clienteId: 0,
-    declarado: 0,
-    rutaLlegadaId: 0,
-    fechaRegistro: new Date(),
-    checkineroId: 0,
-    fondoId: 0,
-  };
-
   const { handleEdit, handleDelete } = useCheckinForm(
     initialFormData,
     clientes,
@@ -155,11 +142,9 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
   if (loading) {
     return <Informa text="Cargando..." btntxt="si" log={false} />;
   }
-
   if (error) {
     return <Informa text={error} btntxt="Cerrar sesion" log={true} />;
   }
-
   if (!usuarios.length || !fondos.length) {
     return (
       <Informa
@@ -173,13 +158,11 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
   return (
     <div className="min-h-screen bg-gradient-to-bl from-slate-400 to-cyan-800">
       <TopPage user={usuarios[0]} />
-
       <main className="container mx-auto p-6">
         <Card className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-3xl font-bold mb-6 text-gray-800">
             Gestión de procesos
           </h2>
-
           {/* Botones de navegación principales */}
           <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
             <Button

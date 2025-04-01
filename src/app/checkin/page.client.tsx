@@ -15,12 +15,10 @@ import { initialFormData } from "@/components/Checkin/utils";
 interface CheckinLlegadasProps {
   user: user;
 }
-
 const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
   const { toast } = useToast();
   const { usuarios, checkin, loading, error, setCheckin, clientes, rutas } =
     useFetchData(user.email);
-
   const {
     formData,
     handleInputChange,
@@ -29,7 +27,6 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
     handleDelete,
     setFormData,
   } = useCheckinForm(initialFormData, clientes, checkin, setCheckin, toast);
-
   // Obtener el ID del usuario al cargar el componente
   useEffect(() => {
     if (usuarios.length > 0) {
@@ -44,11 +41,9 @@ const CheckinLlegadas: React.FC<CheckinLlegadasProps> = ({ user }) => {
   if (loading) {
     return <Informa text="Cargando..." btntxt="Cerrar sesion" log={false} />;
   }
-
   if (error) {
     return <Informa text={error} btntxt="cerrar sesion" log={true} />;
   }
-
   return (
     <div className="min-h-screen bg-gradient-to-bl from-slate-400 to-cyan-800">
       {/* bienvenida y cerrada de sesion del usuario */}
