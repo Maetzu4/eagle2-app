@@ -2,7 +2,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Usuario, Cliente, Fondo, Checkin } from "@/types/interfaces";
-import { highlightMatch } from "@/components/Checkin/utils";
+import { highlightMatch } from "@/components/General/utils";
 
 export const columns: ColumnDef<Checkin>[] = [
   {

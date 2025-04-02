@@ -11,12 +11,12 @@ import { FondosTable } from "@/components/Digitador/fondosTable";
 import { ProcesoForm } from "@/components/Digitador/procesoForm";
 import { useCheckinForm } from "@/hooks/Checkin/useCheckinForm";
 import { DataTable } from "@/components/Checkin/dataTableCheckin";
-import { ServiciosTable, columns } from "@/components/Digitador/serviciosTable";
+import { ServiciosTable } from "@/components/Digitador/serviciosTable";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { generatePDF } from "@/components/Digitador/pdfGenerator";
 import { TopPage } from "@/components/General/topPage";
-import { initialFormData } from "@/components/Checkin/utils";
+import { initialFormData } from "@/components/General/utils";
 
 interface DigitadorOpcionesProps {
   user: user;
@@ -274,7 +274,6 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
 
               <ServiciosTable
                 data={servicios.filter((s) => s.estado === "Inactivo")}
-                columns={columns}
                 onSelectionChange={setSelectedServices}
               />
 

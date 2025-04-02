@@ -10,7 +10,7 @@ import { useCheckinForm } from "@/hooks/Checkin/useCheckinForm";
 import { Informa } from "@/components/General/informa";
 import { Card } from "@/components/ui/card";
 import { TopPage } from "@/components/General/topPage";
-import { initialFormData } from "@/components/Checkin/utils";
+import { initialFormData } from "@/components/General/utils";
 
 interface CheckinLlegadasProps {
   user: user;

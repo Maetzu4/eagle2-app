@@ -13,7 +13,7 @@ import {
 } from "@tanstack/react-table";
 import { Checkin, user } from "@/types/interfaces";
 import { columns } from "./columnsCheckin";
-import { globalFilterFn } from "./utils";
+import { globalFilterFn } from "../General/utils";
 import { Pagination } from "@/components/General/pagination";
 import { SearchBar } from "@/components/General/searchBar";
 import { TableActions } from "@/components/General/tableActions";
