@@ -1,49 +1,54 @@
 // @/app/digitador/page.client.tsx
 "use client";
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/General/use-toast";
-import { user, Servicio } from "@/types/interfaces";
-import { useFetchData } from "@/hooks/General/useFetchData";
 import { Informa } from "@/components/General/informa";
 import { FondosTable } from "@/components/Digitador/fondosTable";
 import { ProcesoForm } from "@/components/Digitador/procesoForm";
-import { useCheckinForm } from "@/hooks/Checkin/useCheckinForm";
 import { DataTable } from "@/components/Checkin/dataTableCheckin";
 import { ServiciosTable } from "@/components/Digitador/serviciosTable";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { generatePDF } from "@/components/Digitador/pdfGenerator";
 import { TopPage } from "@/components/General/topPage";
+import { useCheckinForm } from "@/hooks/Checkin/useCheckinForm";
 import { initialFormData } from "@/components/General/utils";
+import { MenuBotones } from "@/components/General/menuBotones";
+import { opcionesDigitador } from "@/components/Digitador/opcionesDigitador";
+import { useDigitadorLogic } from "@/hooks/Digitador/useDigitador";
+import { user } from "@/types/interfaces";
+import { Button } from "@/components/ui/button";
 
 interface DigitadorOpcionesProps {
   user: user;
 }
+
 const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
-  const { toast } = useToast();
   const {
+    estados,
+    setEstados,
+    groupBy,
+    setGroupBy,
+    selectedServices,
+    setSelectedServices,
+    selectedFondoId,
+    setSelectedFondoId,
+    selectedServiceId,
+    setSelectedServiceId,
+    availableServices,
     usuarios,
     fondos,
     servicios,
     loading,
     error,
-    setServicios,
     checkin,
     clientes,
     setCheckin,
-  } = useFetchData(user.email);
-  const [groupBy, setGroupBy] = useState<"fondo" | "cliente">("fondo");
-  const [selectedServices, setSelectedServices] = useState<number[]>([]);
-  const [isProceso, setIsProceso] = useState(false);
-  const [isCheckin, setIsCheckin] = useState(false);
-  const [isPdf, setIsPdf] = useState(false);
-  const [selectedFondoId, setSelectedFondoId] = useState<number | null>(null);
-  const [selectedServiceId, setSelectedServiceId] = useState<number | null>(
-    null
-  );
-  const [availableServices, setAvailableServices] = useState<Servicio[]>([]);
+    toast,
+    handleCerrarFecha,
+    handleFondoSelect,
+    resetSelection,
+  } = useDigitadorLogic(user);
+
   const { handleEdit, handleDelete } = useCheckinForm(
     initialFormData,
     clientes,
@@ -51,93 +56,6 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
     setCheckin,
     toast
   );
-
-  useEffect(() => {
-    if (!selectedFondoId) {
-      setAvailableServices([]);
-      return;
-    }
-
-    const serviciosActivos = servicios.filter(
-      (s) => s.fondoId === selectedFondoId && s.estado === "Activo"
-    );
-
-    const serviciosOrdenados = [...serviciosActivos].sort(
-      (a, b) =>
-        new Date(b.fechaRegistro).getTime() -
-        new Date(a.fechaRegistro).getTime()
-    );
-
-    setAvailableServices(serviciosOrdenados);
-  }, [selectedFondoId, servicios]);
-
-  const handleCerrarFecha = async () => {
-    if (!selectedServiceId) {
-      toast({
-        title: "Error",
-        description: "Seleccione un servicio",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!selectedFondoId) {
-      toast({
-        title: "Error",
-        description: "Seleccione un fondo válido",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/fechacierre", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          servicioId: selectedServiceId,
-          digitadorId: usuarios[0].idUsuario,
-          fondoId: selectedFondoId,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Error al cerrar el servicio");
-      }
-
-      // Actualizar estado local
-      setServicios((prev) =>
-        prev.map((s) =>
-          s.idServicio === selectedServiceId ? { ...s, estado: "Inactivo" } : s
-        )
-      );
-
-      // Resetear selecciones
-      setSelectedServiceId(null);
-      setAvailableServices((prev) =>
-        prev.filter((s) => s.idServicio !== selectedServiceId)
-      );
-
-      toast({
-        title: "Éxito",
-        description: "Servicio cerrado correctamente",
-        variant: "normal",
-      });
-    } catch (error) {
-      console.error("Error:", error);
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error ? error.message : "Error desconocido",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleFondoSelect = (fondoId: number) => {
-    setSelectedFondoId(fondoId);
-  };
 
   if (loading) {
     return <Informa text="Cargando..." btntxt="si" log={false} />;
@@ -163,50 +81,23 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
           <h2 className="text-3xl font-bold mb-6 text-gray-800">
             Gestión de procesos
           </h2>
-          {/* Botones de navegación principales */}
-          <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
-            <Button
-              onClick={() => {
-                setIsCheckin(!isCheckin);
-                setIsProceso(false);
-                setIsPdf(false);
-                setSelectedFondoId(null);
-              }}
-            >
-              {isCheckin ? "Cerrar llegadas" : "Abrir llegadas"}
-            </Button>
-            <Button
-              onClick={() => {
-                setIsProceso(!isProceso);
-                setIsCheckin(false);
-                setIsPdf(false);
-                setSelectedFondoId(null);
-              }}
-            >
-              {isProceso ? "Cerrar proceso cierres" : "Abrir proceso de Cierre"}
-            </Button>
-            <Button
-              onClick={() => {
-                setIsProceso(false);
-                setIsCheckin(false);
-                setIsPdf(!isPdf);
-                setSelectedFondoId(null);
-              }}
-            >
-              {isPdf ? "Cerrar Menu Pdfs" : "Abrir Menu Pdfs"}
-            </Button>
-          </div>
+          <MenuBotones
+            opciones={opcionesDigitador}
+            estados={estados}
+            setEstados={setEstados}
+            onResetSelection={resetSelection}
+          />
         </Card>
+
         <Card className="bg-white p-6 rounded-lg shadow mt-6">
-          {!isCheckin && !isPdf && !isProceso && (
+          {Object.values(estados).every((estado) => !estado) && (
             <h3 className="text-center w-full font-bold text-3xl">
-              {" "}
-              Abra alguna opcion..
+              Abra alguna opción..
             </h3>
           )}
 
           {/* Sección de Checkins */}
-          {isCheckin && (
+          {estados.isCheckin && (
             <DataTable
               data={checkin}
               onEdit={handleEdit}
@@ -216,7 +107,7 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
           )}
 
           {/* Sección de Proceso de Cierre */}
-          {isProceso && (
+          {estados.isProceso && (
             <div className="space-y-6">
               <div>
                 <FondosTable
@@ -245,7 +136,7 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
           )}
 
           {/* Seccion de generar pdfs*/}
-          {isPdf && (
+          {estados.isPdf && (
             <div className="space-y-4 mt-8">
               <div className="flex justify-between">
                 <h2 className="text-3xl font-bold text-gray-800">
