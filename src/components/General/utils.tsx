@@ -1,4 +1,4 @@
-//@/components/Checkin/utils.tsx
+//@/components/General/utils.tsx
 import { Row } from "@tanstack/react-table";
 import { Checkin, Usuario, Cliente, Fondo } from "@/types/interfaces";
 
