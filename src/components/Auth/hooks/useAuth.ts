@@ -18,6 +18,8 @@ export function useAuth() {
       router.push("/checkin");
     } else if (role === "operario") {
       router.push("/operario");
+    } else if (role === "administrador") {
+      router.push("/admin");
     } else {
       setError("No tiene un rol válido asignado.");
     }
