@@ -27,7 +27,12 @@ interface DataTableProps {
   user: user;
 }
 
-export function DataTable({ data, onDelete, onEdit, user }: DataTableProps) {
+export function DataTableCheckin({
+  data,
+  onDelete,
+  onEdit,
+  user,
+}: DataTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
