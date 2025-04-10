@@ -1,7 +1,7 @@
+// @/components/Admin/dataTableUsuarios.tsx
 "use client";
 import * as React from "react";
 import {
-  ColumnDef,
   ColumnFiltersState,
   SortingState,
   VisibilityState,
@@ -17,10 +17,10 @@ import { SearchBar } from "@/components/General/searchBar";
 import { TableActions } from "@/components/General/tableActions";
 import { TableHeader } from "@/components/General/tableHeader";
 import { TableBody } from "@/components/General/tableBody";
+import { columns } from "@/components/Admin/columnsUsuarios";
 
 interface DataTableProps {
   data: Usuario[];
-  columns: ColumnDef<Usuario>[];
   onDelete: (ids: number[]) => void;
   onEdit: (id: number) => void;
   user: user;
@@ -28,7 +28,6 @@ interface DataTableProps {
 
 export function DataTableUsuarios({
   data,
-  columns,
   onDelete,
   onEdit,
   user,

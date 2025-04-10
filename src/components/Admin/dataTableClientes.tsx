@@ -1,3 +1,4 @@
+// @/components/Admin/dataTableClientes.tsx
 "use client";
 import * as React from "react";
 import {
@@ -11,13 +12,13 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Cliente, user } from "@/types/interfaces";
-import { columns } from "./columnsClientes";
-import { globalFilterFn } from "../General/utils";
-import { Pagination } from "../General/pagination";
-import { SearchBar } from "../General/searchBar";
-import { TableActions } from "../General/tableActions";
-import { TableHeader } from "../General/tableHeader";
-import { TableBody } from "../General/tableBody";
+import { globalFilterFn } from "@/components/General/utils";
+import { Pagination } from "@/components/General/pagination";
+import { SearchBar } from "@/components/General/searchBar";
+import { TableActions } from "@/components/General/tableActions";
+import { TableHeader } from "@/components/General/tableHeader";
+import { TableBody } from "@/components/General/tableBody";
+import { columns } from "@/components/Admin/columnsClientes";
 
 interface DataTableProps {
   data: Cliente[];

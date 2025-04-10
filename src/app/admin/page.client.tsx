@@ -11,13 +11,6 @@ import { MenuBotones } from "@/components/General/menuBotones";
 import { opcionesAdmin } from "@/components/Admin/opcionesAdmin";
 import { useAdminLogic } from "@/hooks/Admin/useAdmin";
 import { user } from "@/types/interfaces";
-import { columns as usuarioColumns } from "@/components/Admin/columnsUsuarios";
-import { columns as fondoColumns } from "@/components/Digitador/columnsFondos";
-import { columns as clienteColumns } from "@/components/Admin/columnsClientes";
-import { columns as rutaColumns } from "@/components/Admin/columnsRutas";
-import { columns as servicioColumns } from "@/components/Digitador/columnsServicios";
-import { columns as fechaCierreColumns } from "@/components/Admin/columnsFechaCierre";
-import { columns as sedeColumns } from "@/components/Admin/columnsSedes";
 import { UsuarioForm } from "@/components/Admin/usuarioForm";
 import { FondoForm } from "@/components/Admin/fondoForm";
 import { ClienteForm } from "@/components/Admin/clienteForm";
@@ -26,8 +19,11 @@ import { ServicioForm } from "@/components/Admin/servicioForm";
 import { FechaCierreForm } from "@/components/Admin/fechaCierreForm";
 import { SedeForm } from "@/components/Admin/sedeForm";
 import { DataTableUsuarios } from "@/components/Admin/dataTableUsuarios";
-import { DataTableFondos } from "@/components/Admin/dataTableFondos";
+import { DataTableFondos } from "@/components/Digitador/dataTableFondos";
 import { DataTableClientes } from "@/components/Admin/dataTableClientes";
+import { DataTableRutas } from "@/components/Admin/dataTableRutas";
+import { DataTableFechasCierre } from "@/components/Admin/dataTableFechasCierre";
+import { DataTableSedes } from "@/components/Admin/dataTableSedes";
 
 interface AdminProps {
   user: user;
@@ -85,7 +81,6 @@ const Admin: React.FC<AdminProps> = ({ user }) => {
             data={usuarios}
             onEdit={handleEdit}
             onDelete={handleDelete}
-            columns={usuarioColumns}
             user={user}
           />
         );
@@ -93,10 +88,10 @@ const Admin: React.FC<AdminProps> = ({ user }) => {
         return (
           <DataTableFondos
             data={fondos}
-            onEdit={handleEdit}
             onDelete={handleDelete}
-            columns={fondoColumns}
+            onEdit={handleEdit}
             user={user}
+            mode="admin"
           />
         );
       case "clientes":
@@ -105,7 +100,6 @@ const Admin: React.FC<AdminProps> = ({ user }) => {
             data={clientes}
             onEdit={handleEdit}
             onDelete={handleDelete}
-            columns={clienteColumns}
             user={user}
           />
         );

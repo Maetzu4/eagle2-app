@@ -2,7 +2,7 @@
 "use client";
 import { Card } from "@/components/ui/card";
 import { Informa } from "@/components/General/informa";
-import { FondosTable } from "@/components/Digitador/fondosTable";
+import { DataTableFondos } from "@/components/Digitador/dataTableFondos";
 import { ProcesoForm } from "@/components/Digitador/procesoForm";
 import { DataTable } from "@/components/Checkin/dataTableCheckin";
 import { ServiciosTable } from "@/components/Digitador/serviciosTable";
@@ -110,12 +110,13 @@ const DigitadorOpciones: React.FC<DigitadorOpcionesProps> = ({ user }) => {
           {estados.isProceso && (
             <div className="space-y-6">
               <div>
-                <FondosTable
+                <DataTableFondos
                   data={fondos}
+                  user={user}
                   onSelect={handleFondoSelect}
                   selectedFondoId={selectedFondoId}
                   setSelectedServiceId={setSelectedServiceId}
-                  selectedServiceId={selectedServiceId}
+                  mode="selection"
                 />
               </div>
 
