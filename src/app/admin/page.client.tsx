@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { Informa } from "@/components/General/informa";
 import { DataTableCheckin } from "@/components/Checkin/dataTableCheckin";
 import { ServiciosTable } from "@/components/Digitador/serviciosTable";
-import { DataTableFondos } from "@/components/Digitador/fondosTable";
 import { TopPage } from "@/components/General/topPage";
 import { useCheckinForm } from "@/hooks/Checkin/useCheckinForm";
 import { initialFormData } from "@/components/General/utils";
@@ -26,6 +25,9 @@ import { RutaForm } from "@/components/Admin/rutaForm";
 import { ServicioForm } from "@/components/Admin/servicioForm";
 import { FechaCierreForm } from "@/components/Admin/fechaCierreForm";
 import { SedeForm } from "@/components/Admin/sedeForm";
+import { DataTableUsuarios } from "@/components/Admin/dataTableUsuarios";
+import { DataTableFondos } from "@/components/Admin/dataTableFondos";
+import { DataTableClientes } from "@/components/Admin/dataTableClientes";
 
 interface AdminProps {
   user: user;
