@@ -1,16 +1,6 @@
 // src/hooks/Admin/useAdmin.ts
 import { useState, useEffect } from "react";
-import {
-  user,
-  Usuario,
-  Fondo,
-  Cliente,
-  RutaLlegada,
-  Servicio,
-  FechaCierre,
-  Checkin,
-  Sede,
-} from "@/types/interfaces";
+import { user, FechaCierre, Sede } from "@/types/interfaces";
 import { useToast } from "@/hooks/General/use-toast";
 import { useFetchData } from "@/hooks/General/useFetchData";
 import { opcionesAdmin } from "@/components/Admin/opcionesAdmin";
@@ -203,7 +193,7 @@ export function useAdminLogic(user: user) {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev: any) => ({
+    setFormData((prev: FormData) => ({
       ...prev,
       [name]: value,
     }));

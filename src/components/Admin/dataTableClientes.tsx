@@ -2,6 +2,7 @@
 "use client";
 import * as React from "react";
 import {
+  ColumnDef,
   ColumnFiltersState,
   SortingState,
   VisibilityState,
@@ -42,9 +43,9 @@ export function DataTableClientes({
   const [rowSelection, setRowSelection] = React.useState({});
   const [filterValue, setFilterValue] = React.useState("");
 
-  const table = useReactTable({
+  const table = useReactTable<Cliente>({
     data,
-    columns,
+    columns: columns as ColumnDef<Cliente>[],
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),

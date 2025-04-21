@@ -83,9 +83,10 @@ export interface Usuario {
   name: string;
   lastname: string;
   email: string;
+  password?: string;
   status: "Activo" | "Inactivo";
   role: "checkinero" | "digitador" | "operario" | "administrador";
-  sedeId: number; // Relación con Sede
+  sedeId: number;
   checkins: Checkin[];
   servicios: Servicio[];
   fechaCierres: FechaCierre[];

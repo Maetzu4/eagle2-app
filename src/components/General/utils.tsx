@@ -1,6 +1,7 @@
 //@/components/General/utils.tsx
 import { Row } from "@tanstack/react-table";
-import { Checkin, Usuario, Cliente, Fondo } from "@/types/interfaces";
+import { Checkin, Usuario, Cliente, Fondo, Sede } from "@/types/interfaces";
+import { subtle } from "crypto";
 
 export const initialFormData: Checkin = {
   planilla: 0,
@@ -14,70 +15,65 @@ export const initialFormData: Checkin = {
   fondo: undefined,
 };
 
-// Función de filtrado global
-export const globalFilterFn = (
-  row: Row<Checkin>,
+export const globalFilterFn = <T,>(
+  row: Row<T>,
   columnId: string,
   filterValue: string
 ): boolean => {
-  const visibleFields = [
-    "planilla",
-    "sello",
-    "declarado",
-    "rutaLlegadaId",
-    "fechaRegistro",
-    "checkinero",
-    "clientes",
-    "fondo",
-  ];
+  const value = row.getValue(columnId);
+  const filter = filterValue.toLowerCase();
 
-  return visibleFields.some((field) => {
-    const value = row.original[field as keyof Checkin];
+  // 1. Manejo de valores nulos/undefined
+  if (value === null || value === undefined) return false;
 
-    if (field === "checkinero") {
-      const checkinero: Usuario = value as Usuario;
-      const fullName = `${checkinero.name} ${checkinero.lastname}`;
-      return fullName.toLowerCase().includes(filterValue.toLowerCase());
+  // 2. Manejo de objetos anidados comunes
+  if (typeof value === "object") {
+    // Para fondos
+    if ("nombre" in value && "tipo" in value) {
+      const fondo = value as Fondo;
+      return fondo.nombre.toLowerCase().includes(filter);
     }
 
-    if (field === "clientes") {
-      const cliente: Cliente = value as Cliente;
-      return cliente.name.toLowerCase().includes(filterValue.toLowerCase());
+    // Para sedes
+    if ("nombre" in value && "direccion" in value) {
+      const sede = value as Sede;
+      return sede.nombre.toLowerCase().includes(filter);
     }
 
-    if (field === "fondo") {
-      const fondo: Fondo = value as Fondo;
-      return fondo.nombre.toLowerCase().includes(filterValue.toLowerCase());
+    // Para usuarios
+    if ("name" in value && "email" in value) {
+      const usuario = value as Usuario;
+      const fullName = `${usuario.name} ${
+        usuario.lastname || ""
+      }`.toLowerCase();
+      return (
+        fullName.includes(filter) ||
+        usuario.email.toLowerCase().includes(filter)
+      );
     }
 
-    if (field === "fechaRegistro") {
-      if (value instanceof Date) {
-        return value
-          .toLocaleString()
-          .toLowerCase()
-          .includes(filterValue.toLowerCase());
-      }
-      if (typeof value === "string") {
-        const date = new Date(value);
-        return date
-          .toLocaleString()
-          .toLowerCase()
-          .includes(filterValue.toLowerCase());
-      }
-      return false;
+    // Para clientes (cuando está anidado)
+    if ("name" in value && "idCliente" in value) {
+      const cliente = value as Cliente;
+      return cliente.name.toLowerCase().includes(filter);
     }
+  }
 
-    if (field === "declarado") {
-      const declarado = parseFloat(value?.toString() || "0");
-      const formatted = new Intl.NumberFormat("es-CO", {
-        style: "currency",
-        currency: "COP",
-      }).format(declarado);
-      return formatted.toLowerCase().includes(filterValue.toLowerCase());
-    }
+  // 3. Manejo de fechas
+  if (value instanceof Date) {
+    return value.toLocaleString().toLowerCase().includes(filter);
+  }
 
-    return value?.toString().toLowerCase().includes(filterValue.toLowerCase());
-  });
+  // 4. Manejo de números (incluyendo formato monetario)
+  if (typeof value === "number") {
+    return (
+      value.toString().includes(filterValue) ||
+      new Intl.NumberFormat().format(value).includes(filterValue)
+    );
+  }
+
+  // 5. Valor por defecto (strings y otros)
+  return value.toString().toLowerCase().includes(filter);
 };
 
 // Función para resaltar coincidencias
@@ -95,3 +91,15 @@ export const highlightMatch = (text: string, filterValue: string) => {
     )
   );
 };
+
+export async function hashPassword(password: string): Promise<string> {
+  // Usamos el API Web Crypto para mayor seguridad
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return hashHex;
+}

@@ -29,8 +29,9 @@ interface AdminProps {
   user: user;
 }
 
-const Admin: React.FC<AdminProps> = ({ user }) => {
+export const Admin: React.FC<AdminProps> = ({ user }) => {
   const {
+    sedes,
     estados,
     setEstados,
     selectedTable,
@@ -109,7 +110,6 @@ const Admin: React.FC<AdminProps> = ({ user }) => {
             data={rutas}
             onEdit={handleEdit}
             onDelete={handleDelete}
-            columns={rutaColumns}
             user={user}
           />
         );
@@ -128,7 +128,6 @@ const Admin: React.FC<AdminProps> = ({ user }) => {
             data={servicios}
             onEdit={handleEdit}
             onDelete={handleDelete}
-            columns={servicioColumns}
             user={user}
           />
         );
@@ -138,7 +137,6 @@ const Admin: React.FC<AdminProps> = ({ user }) => {
             data={fechasCierre}
             onEdit={handleEdit}
             onDelete={handleDelete}
-            columns={fechaCierreColumns}
             user={user}
           />
         );
@@ -148,7 +146,6 @@ const Admin: React.FC<AdminProps> = ({ user }) => {
             data={sedes}
             onEdit={handleEdit}
             onDelete={handleDelete}
-            columns={sedeColumns}
             user={user}
           />
         );
@@ -161,11 +158,22 @@ const Admin: React.FC<AdminProps> = ({ user }) => {
     switch (selectedTable) {
       case "usuarios":
         return (
+          // En tu página de administración
           <UsuarioForm
-            formData={formData}
-            onSubmit={handleSubmit}
-            onInputChange={handleInputChange}
-            isEditMode={!!formData.idUsuario}
+            formData={currentUser}
+            onInputChange={(field, value) =>
+              setCurrentUser((prev) => ({ ...prev, [field]: value }))
+            }
+            onSubmit={async (userData) => {
+              if (userData.idUsuario) {
+                await updateUser(userData);
+              } else {
+                await createUser(userData);
+              }
+              // Actualizar lista de usuarios después
+            }}
+            isEditMode={!!currentUser.idUsuario}
+            sedes={sedesList}
           />
         );
       case "fondos":
@@ -270,5 +278,3 @@ const Admin: React.FC<AdminProps> = ({ user }) => {
     </div>
   );
 };
-
-export default Admin;
